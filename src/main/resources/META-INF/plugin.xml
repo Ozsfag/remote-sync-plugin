@@ -1,0 +1,22 @@
+<idea-plugin>
+    <id>com.blacksoil.remotesync</id>
+    <name>Remote Sync</name>
+    <version>1.0.0</version>
+    <vendor email="emeliangaiday@gmail.com">Dev</vendor>
+
+    <!-- Требуемый модуль -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Tool Window -->
+        <toolWindow id="Remote Sync"
+                    anchor="bottom"
+                    factoryClass="org.blacksoil.remotesync.RemoteSyncToolWindowFactory"
+                    icon="/icons/icon.svg"/>
+
+        <!-- Project-level service (settings) -->
+        <projectService
+                serviceInterface="org.blacksoil.remotesync.RemoteSyncSettings"
+                serviceImplementation="org.blacksoil.remotesync.RemoteSyncSettings"/>
+    </extensions>
+</idea-plugin>
