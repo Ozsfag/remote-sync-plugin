@@ -3,17 +3,26 @@ package org.blacksoil.remotesync;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@State(name = "RemoteSyncSettings", storages = @Storage("remoteSyncSettings.xml"))
-@Service(Service.Level.PROJECT)
-public final class RemoteSyncSettings
-    implements PersistentStateComponent<RemoteSyncSettings.State> {
+@State(
+    name = "RemoteSyncSettings",
+    storages = {@Storage("remote-sync-settings.xml")})
+public class RemoteSyncSettings implements PersistentStateComponent<RemoteSyncSettings.State> {
 
   private State state = new State();
 
-  public static RemoteSyncSettings getInstance(Project project) {
+  public static RemoteSyncSettings getInstance(@NotNull Project project) {
     return project.getService(RemoteSyncSettings.class);
+  }
+
+  @Override
+  public @NotNull State getState() {
+    return state;
+  }
+
+  @Override
+  public void loadState(@NotNull State state) {
+    this.state = state;
   }
 
   public static class State {
@@ -22,15 +31,5 @@ public final class RemoteSyncSettings
     public String privateKeyPath = "";
     public String remotePath = "";
     public String branch = "";
-  }
-
-  @Override
-  public @Nullable State getState() {
-    return state;
-  }
-
-  @Override
-  public void loadState(@NotNull State state) {
-    this.state = state;
   }
 }

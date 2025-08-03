@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.util.ui.JBUI;
 import java.awt.event.ActionEvent;
 import java.util.List;
+import java.util.Objects;
 import javax.swing.*;
 
 public class RemoteSyncPanel {
@@ -20,79 +21,88 @@ public class RemoteSyncPanel {
   private JLabel statusLabel;
 
   public RemoteSyncPanel(Project project) {
-    $$$setupUI$$$(); // генерируется UI Designer
+    $$$setupUI$$$();
 
     RemoteSyncSettings settings = RemoteSyncSettings.getInstance(project);
-    RemoteSyncSettings.State state = settings.getState();
+    RemoteSyncSettings.State state = Objects.requireNonNull(settings.getState());
 
-    // Инициализация UI значениями из state
-    assert state != null;
+    // Установка сохранённых значений
     usernameField.setText(state.username);
     hostField.setText(state.host);
     keyPathField.setText(state.privateKeyPath);
     remotePathField.setText(state.remotePath);
-    branchField.setText(state.branch);
+    branchField.setText(state.branch != null ? state.branch : "main");
 
-    syncButton.addActionListener(
-        (ActionEvent e) ->
-            new Thread(
-                    () -> {
-                      try {
-                        if (state == null) {
-                          statusLabel.setText("Settings unavailable.");
-                          return;
-                        }
-
-                        statusLabel.setText("Saving settings...");
-                        state.username = usernameField.getText().trim();
-                        state.host = hostField.getText().trim();
-                        state.privateKeyPath = keyPathField.getText().trim();
-                        state.remotePath = remotePathField.getText().trim();
-                        state.branch = branchField.getText().trim();
-
-                        statusLabel.setText("Detecting changes...");
-                        GitDiffDetector.DiffResult diffResult =
-                            GitDiffDetector.getChangedFiles(project.getBasePath(), state.branch);
-                        List<String> changed = diffResult.addedOrModified;
-                        List<String> deleted = diffResult.deleted;
-
-                        if (changed.isEmpty() && deleted.isEmpty()) {
-                          statusLabel.setText("No changes.");
-                          return;
-                        }
-
-                        if (!changed.isEmpty()) {
-                          statusLabel.setText("Uploading " + changed.size() + " file(s)...");
-                          SshUploader.uploadFiles(
-                              changed,
-                              project.getBasePath(),
-                              state.remotePath,
-                              state.host,
-                              state.username,
-                              state.privateKeyPath);
-                        }
-
-                        if (!deleted.isEmpty()) {
-                          statusLabel.setText("Deleting " + deleted.size() + " file(s)...");
-                          SshUploader.deleteFiles(
-                              deleted,
-                              state.remotePath,
-                              state.host,
-                              state.username,
-                              state.privateKeyPath);
-                        }
-
-                        statusLabel.setText("Sync complete.");
-                      } catch (Exception ex) {
-                        LOG.error("Sync failed", ex);
-                        statusLabel.setText("Error: " + ex.getMessage());
-                      }
-                    })
-                .start());
+    syncButton.addActionListener((ActionEvent e) -> performSync(project, state, settings));
   }
 
   public JPanel getContent() {
     return mainPanel;
+  }
+
+  private void performSync(
+      Project project, RemoteSyncSettings.State state, RemoteSyncSettings settings) {
+    new Thread(
+            () -> {
+              setUiEnabled(false);
+              try {
+                updateStatus("Saving settings...");
+
+                // Сохранение новых данных
+                state.username = usernameField.getText().trim();
+                state.host = hostField.getText().trim();
+                state.privateKeyPath = keyPathField.getText().trim();
+                state.remotePath = remotePathField.getText().trim();
+                state.branch = branchField.getText().trim();
+
+                settings.loadState(state);
+
+                updateStatus("Detecting changes...");
+
+                GitDiffDetector.DiffResult diff =
+                    GitDiffDetector.getChangedFiles(project.getBasePath(), state.branch);
+                List<String> addedOrModified = diff.addedOrModified();
+                List<String> deleted = diff.deleted();
+
+                if (addedOrModified.isEmpty() && deleted.isEmpty()) {
+                  updateStatus("No changes.");
+                  return;
+                }
+
+                if (!addedOrModified.isEmpty()) {
+                  updateStatus("Uploading " + addedOrModified.size() + " file(s)...");
+                  SshUploader.uploadFiles(
+                      addedOrModified,
+                      project.getBasePath(),
+                      state.remotePath,
+                      state.host,
+                      state.username,
+                      state.privateKeyPath);
+                }
+
+                if (!deleted.isEmpty()) {
+                  updateStatus("Deleting " + deleted.size() + " file(s)...");
+                  SshUploader.deleteFiles(
+                      deleted, state.remotePath, state.host, state.username, state.privateKeyPath);
+                }
+
+                updateStatus("Sync complete.");
+              } catch (Exception ex) {
+                LOG.error("Sync failed", ex);
+                updateStatus("Error: " + ex.getMessage());
+              } finally {
+                setUiEnabled(true);
+              }
+            })
+        .start();
+  }
+
+  private void updateStatus(String message) {
+    SwingUtilities.invokeLater(() -> statusLabel.setText(message));
+  }
+
+  private void setUiEnabled(boolean enabled) {
+    SwingUtilities.invokeLater(() -> syncButton.setEnabled(enabled));
   }
 
   private void $$$setupUI$$$() {

@@ -1,54 +1,49 @@
 package org.blacksoil.remotesync;
 
+import com.intellij.openapi.diagnostic.Logger;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class GitDiffDetector {
 
-  public static class DiffResult {
-    public List<String> addedOrModified = new ArrayList<>();
-    public List<String> deleted = new ArrayList<>();
-  }
+  private static final Logger LOG = Logger.getInstance(GitDiffDetector.class);
+
+  public record DiffResult(List<String> addedOrModified, List<String> deleted) {}
 
   public static DiffResult getChangedFiles(String projectDir, String branch) {
-    DiffResult result = new DiffResult();
+    List<String> addedOrModified =
+        runGitCommand(projectDir, "diff", "--name-only", "origin/" + branch);
+    List<String> deleted =
+        runGitCommand(projectDir, "diff", "--name-only", "--diff-filter=D", "origin/" + branch);
+    return new DiffResult(addedOrModified, deleted);
+  }
+
+  private static List<String> runGitCommand(String directory, String... args) {
+    List<String> result = new ArrayList<>();
     try {
-      ProcessBuilder builder = new ProcessBuilder(
-              "git", "diff", "--name-status", "origin/" + branch
-      );
-      builder.directory(new java.io.File(projectDir));
+      List<String> command = new ArrayList<>();
+      command.add("git");
+      Collections.addAll(command, args);
+
+      ProcessBuilder builder = new ProcessBuilder(command);
+      builder.directory(new java.io.File(directory));
       builder.redirectErrorStream(true);
 
       Process process = builder.start();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-      String line;
-      while ((line = reader.readLine()) != null) {
-        String[] parts = line.trim().split("\t");
-        if (parts.length == 2) {
-          String status = parts[0];
-          String file = parts[1];
-
-          switch (status) {
-            case "A":
-            case "M":
-              result.addedOrModified.add(file);
-              break;
-            case "D":
-              result.deleted.add(file);
-              break;
-            // можно добавить "R", "C" — rename/copy если потребуется
-          }
+      try (BufferedReader reader =
+          new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+          result.add(line.trim());
         }
       }
-
       process.waitFor();
     } catch (Exception e) {
-      System.err.println("Error detecting git changes: " + e.getMessage());
+      LOG.error("Git command failed: " + String.join(" ", args), e);
     }
-
     return result;
   }
 }

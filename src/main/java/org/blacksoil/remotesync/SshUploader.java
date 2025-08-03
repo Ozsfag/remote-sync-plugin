@@ -17,72 +17,39 @@ public class SshUploader {
       String remotePath,
       String host,
       String username,
-      String privateKeyPath) {
-    JSch jsch = new JSch();
-    Session session = null;
-
-    try {
-      jsch.addIdentity(privateKeyPath);
-      session = jsch.getSession(username, host, 22);
-
-      Properties config = new Properties();
-      config.put("StrictHostKeyChecking", "no");
-      session.setConfig(config);
-
-      session.connect();
-
-      for (String filePath : files) {
-        File file = new File(localRoot, filePath);
-        String remoteFilePath = remotePath + "/" + filePath;
-
-        uploadFile(session, file, remoteFilePath);
-        System.out.println("Uploaded: " + file.getPath() + " → " + remoteFilePath);
-      }
-
-    } catch (Exception e) {
-      LOG.error("Upload failed.", e);
-    } finally {
-      if (session != null && session.isConnected()) {
-        session.disconnect();
-      }
-    }
-  }
-
-  private static void uploadFile(Session session, File localFile, String remoteFilePath)
+      String privateKeyPath)
       throws Exception {
-    String command = "scp -t \"" + remoteFilePath + "\"";
-    Channel channel = session.openChannel("exec");
-    ((ChannelExec) channel).setCommand(command);
-
-    OutputStream out = channel.getOutputStream();
-    FileInputStream fis = new FileInputStream(localFile);
-
-    channel.connect();
-
-    String commandMeta = "C0644 " + localFile.length() + " " + localFile.getName() + "\n";
-    out.write(commandMeta.getBytes());
-    out.flush();
-
-    byte[] buffer = new byte[1024];
-    int len;
-    while ((len = fis.read(buffer)) != -1) {
-      out.write(buffer, 0, len);
+    try (SshSession session = new SshSession(host, username, privateKeyPath)) {
+      for (String relativePath : files) {
+        File localFile = new File(localRoot, relativePath);
+        if (!localFile.exists()) {
+          LOG.warn("Skipping missing file: " + localFile.getAbsolutePath());
+          continue;
+        }
+        String remoteFile = remotePath + "/" + relativePath;
+        session.uploadFile(localFile, remoteFile);
+        LOG.info("Uploaded: " + localFile.getPath() + " → " + remoteFile);
+      }
     }
-    fis.close();
-
-    out.write(0);
-    out.flush();
-    out.close();
-
-    channel.disconnect();
   }
 
   public static void deleteFiles(
-      List<String> files, String remotePath, String host, String username, String privateKeyPath) {
-    JSch jsch = new JSch();
-    Session session = null;
+      List<String> files, String remotePath, String host, String username, String privateKeyPath)
+      throws Exception {
+    try (SshSession session = new SshSession(host, username, privateKeyPath)) {
+      for (String relativePath : files) {
+        String remoteFile = remotePath + "/" + relativePath;
+        session.deleteFile(remoteFile);
+        LOG.info("Deleted: " + remoteFile);
+      }
+    }
+  }
 
-    try {
+  static class SshSession implements AutoCloseable {
+    private final Session session;
+
+    SshSession(String host, String username, String privateKeyPath) throws Exception {
+      JSch jsch = new JSch();
       jsch.addIdentity(privateKeyPath);
       session = jsch.getSession(username, host, 22);
 
@@ -91,22 +58,48 @@ public class SshUploader {
       session.setConfig(config);
 
       session.connect();
+    }
 
-      for (String filePath : files) {
-        String remoteFilePath = remotePath + "/" + filePath;
+    void uploadFile(File localFile, String remoteFilePath) throws Exception {
+      String command = "scp -t " + remoteFilePath;
+      ChannelExec channel = (ChannelExec) session.openChannel("exec");
+      channel.setCommand(command);
 
-        String command = "rm -f \"" + remoteFilePath + "\"";
-        Channel channel = session.openChannel("exec");
-        ((ChannelExec) channel).setCommand(command);
+      try (OutputStream out = channel.getOutputStream();
+          FileInputStream fis = new FileInputStream(localFile)) {
         channel.connect();
-        channel.disconnect();
 
-        System.out.println("Deleted: " + remoteFilePath);
+        String meta = "C0644 " + localFile.length() + " " + localFile.getName() + "\n";
+        out.write(meta.getBytes());
+        out.flush();
+
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = fis.read(buffer)) != -1) {
+          out.write(buffer, 0, len);
+        }
+
+        out.write(0);
+        out.flush();
       }
 
-    } catch (Exception e) {
-      LOG.error("Deletion failed.", e);
-    } finally {
+      channel.disconnect();
+    }
+
+    void deleteFile(String remoteFilePath) throws Exception {
+      String command = "rm -f " + escape(remoteFilePath);
+      ChannelExec channel = (ChannelExec) session.openChannel("exec");
+      channel.setCommand(command);
+      channel.connect();
+      channel.disconnect();
+    }
+
+    private String escape(String path) {
+      return path.replace(" ", "\\ ");
+    }
+
+    @Override
+    public void close() {
       if (session != null && session.isConnected()) {
         session.disconnect();
       }
