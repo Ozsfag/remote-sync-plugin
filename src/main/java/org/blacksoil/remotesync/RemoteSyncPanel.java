@@ -3,166 +3,294 @@ package org.blacksoil.remotesync;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.ui.JBUI;
-
-import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.util.List;
+import javax.swing.*;
 
 public class RemoteSyncPanel {
-    private static final Logger LOG = Logger.getInstance(RemoteSyncPanel.class);
+  private static final Logger LOG = Logger.getInstance(RemoteSyncPanel.class);
 
-    private JPanel mainPanel;
-    private JTextField usernameField;
-    private JTextField hostField;
-    private JTextField keyPathField;
-    private JTextField remotePathField;
-    private JTextField branchField;
-    private JButton syncButton;
-    private JLabel statusLabel;
+  private JPanel mainPanel;
+  private JTextField usernameField;
+  private JTextField hostField;
+  private JTextField keyPathField;
+  private JTextField remotePathField;
+  private JTextField branchField;
+  private JButton syncButton;
+  private JLabel statusLabel;
 
-    public RemoteSyncPanel(Project project) {
-        $$$setupUI$$$(); // генерируется UI Designer
+  public RemoteSyncPanel(Project project) {
+    $$$setupUI$$$(); // генерируется UI Designer
 
-        RemoteSyncSettings settings = RemoteSyncSettings.getInstance(project);
-        RemoteSyncSettings.State state = settings.getState();
+    RemoteSyncSettings settings = RemoteSyncSettings.getInstance(project);
+    RemoteSyncSettings.State state = settings.getState();
 
-        // Инициализация UI значениями из state
-        assert state != null;
-        usernameField.setText(state.username);
-        hostField.setText(state.host);
-        keyPathField.setText(state.privateKeyPath);
-        remotePathField.setText(state.remotePath);
-        branchField.setText(state.branch);
+    // Инициализация UI значениями из state
+    assert state != null;
+    usernameField.setText(state.username);
+    hostField.setText(state.host);
+    keyPathField.setText(state.privateKeyPath);
+    remotePathField.setText(state.remotePath);
+    branchField.setText(state.branch);
 
-        syncButton.addActionListener((ActionEvent e) -> new Thread(() -> {
-            try {
-                statusLabel.setText("Saving settings...");
+    syncButton.addActionListener(
+        (ActionEvent e) ->
+            new Thread(
+                    () -> {
+                      try {
+                        if (state == null) {
+                          statusLabel.setText("Settings unavailable.");
+                          return;
+                        }
 
-                // Сохраняем введённые данные
-                state.username = usernameField.getText().trim();
-                state.host = hostField.getText().trim();
-                state.privateKeyPath = keyPathField.getText().trim();
-                state.remotePath = remotePathField.getText().trim();
-                state.branch = branchField.getText().trim();
+                        statusLabel.setText("Saving settings...");
+                        state.username = usernameField.getText().trim();
+                        state.host = hostField.getText().trim();
+                        state.privateKeyPath = keyPathField.getText().trim();
+                        state.remotePath = remotePathField.getText().trim();
+                        state.branch = branchField.getText().trim();
 
-                statusLabel.setText("Detecting changes...");
-                List<String> changed = GitDiffDetector.getChangedFiles(project.getBasePath(), state.branch);
-                if (changed.isEmpty()) {
-                    statusLabel.setText("No changes to upload.");
-                    return;
-                }
+                        statusLabel.setText("Detecting changes...");
+                        GitDiffDetector.DiffResult diffResult =
+                            GitDiffDetector.getChangedFiles(project.getBasePath(), state.branch);
+                        List<String> changed = diffResult.addedOrModified;
+                        List<String> deleted = diffResult.deleted;
 
-                statusLabel.setText("Uploading...");
-                SshUploader.uploadFiles(
-                        changed,
-                        project.getBasePath(),
-                        state.remotePath,
-                        state.host,
-                        state.username,
-                        state.privateKeyPath
-                );
+                        if (changed.isEmpty() && deleted.isEmpty()) {
+                          statusLabel.setText("No changes.");
+                          return;
+                        }
 
-                statusLabel.setText("Sync complete.");
-            } catch (Exception ex) {
-                LOG.error("Sync failed", ex);
-                statusLabel.setText("Error: " + ex.getMessage());
-            }
-        }).start());
-    }
+                        if (!changed.isEmpty()) {
+                          statusLabel.setText("Uploading " + changed.size() + " file(s)...");
+                          SshUploader.uploadFiles(
+                              changed,
+                              project.getBasePath(),
+                              state.remotePath,
+                              state.host,
+                              state.username,
+                              state.privateKeyPath);
+                        }
 
-    public JPanel getContent() {
-        return mainPanel;
-    }
+                        if (!deleted.isEmpty()) {
+                          statusLabel.setText("Deleting " + deleted.size() + " file(s)...");
+                          SshUploader.deleteFiles(
+                              deleted,
+                              state.remotePath,
+                              state.host,
+                              state.username,
+                              state.privateKeyPath);
+                        }
 
-    private void $$$setupUI$$$() {
-        mainPanel = new JPanel();
-        mainPanel.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(7, 2, JBUI.insets(10), -1, -1));
+                        statusLabel.setText("Sync complete.");
+                      } catch (Exception ex) {
+                        LOG.error("Sync failed", ex);
+                        statusLabel.setText("Error: " + ex.getMessage());
+                      }
+                    })
+                .start());
+  }
 
-        JLabel label1 = new JLabel("Username:");
-        usernameField = new JTextField();
+  public JPanel getContent() {
+    return mainPanel;
+  }
 
-        JLabel label2 = new JLabel("Host/IP:");
-        hostField = new JTextField();
+  private void $$$setupUI$$$() {
+    mainPanel = new JPanel();
+    mainPanel.setLayout(
+        new com.intellij.uiDesigner.core.GridLayoutManager(7, 2, JBUI.insets(10), -1, -1));
 
-        JLabel label3 = new JLabel("Private Key Path:");
-        keyPathField = new JTextField();
+    JLabel label1 = new JLabel("Username:");
+    usernameField = new JTextField();
 
-        JLabel label4 = new JLabel("Remote Path:");
-        remotePathField = new JTextField();
+    JLabel label2 = new JLabel("Host/IP:");
+    hostField = new JTextField();
 
-        JLabel label5 = new JLabel("Git Branch:");
-        branchField = new JTextField();
+    JLabel label3 = new JLabel("Private Key Path:");
+    keyPathField = new JTextField();
 
-        syncButton = new JButton("Save & Sync");
-        statusLabel = new JLabel("Status: Ready");
+    JLabel label4 = new JLabel("Remote Path:");
+    remotePathField = new JTextField();
 
-        mainPanel.add(label1, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1,
-                com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
-                com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null));
-        mainPanel.add(usernameField, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1,
-                com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
-                com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null));
+    JLabel label5 = new JLabel("Git Branch:");
+    branchField = new JTextField();
 
-        mainPanel.add(label2, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1,
-                com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
-                com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null));
-        mainPanel.add(hostField, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 1,
-                com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
-                com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null));
+    syncButton = new JButton("Save & Sync");
+    statusLabel = new JLabel("Status: Ready");
 
-        mainPanel.add(label3, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 1,
-                com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
-                com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null));
-        mainPanel.add(keyPathField, new com.intellij.uiDesigner.core.GridConstraints(2, 1, 1, 1,
-                com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
-                com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null));
+    mainPanel.add(
+        label1,
+        new com.intellij.uiDesigner.core.GridConstraints(
+            0,
+            0,
+            1,
+            1,
+            com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
+            com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            null,
+            null,
+            null));
+    mainPanel.add(
+        usernameField,
+        new com.intellij.uiDesigner.core.GridConstraints(
+            0,
+            1,
+            1,
+            1,
+            com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
+            com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            null,
+            null,
+            null));
 
-        mainPanel.add(label4, new com.intellij.uiDesigner.core.GridConstraints(3, 0, 1, 1,
-                com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
-                com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null));
-        mainPanel.add(remotePathField, new com.intellij.uiDesigner.core.GridConstraints(3, 1, 1, 1,
-                com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
-                com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null));
+    mainPanel.add(
+        label2,
+        new com.intellij.uiDesigner.core.GridConstraints(
+            1,
+            0,
+            1,
+            1,
+            com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
+            com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            null,
+            null,
+            null));
+    mainPanel.add(
+        hostField,
+        new com.intellij.uiDesigner.core.GridConstraints(
+            1,
+            1,
+            1,
+            1,
+            com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
+            com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            null,
+            null,
+            null));
 
-        mainPanel.add(label5, new com.intellij.uiDesigner.core.GridConstraints(4, 0, 1, 1,
-                com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
-                com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null));
-        mainPanel.add(branchField, new com.intellij.uiDesigner.core.GridConstraints(4, 1, 1, 1,
-                com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
-                com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null));
+    mainPanel.add(
+        label3,
+        new com.intellij.uiDesigner.core.GridConstraints(
+            2,
+            0,
+            1,
+            1,
+            com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
+            com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            null,
+            null,
+            null));
+    mainPanel.add(
+        keyPathField,
+        new com.intellij.uiDesigner.core.GridConstraints(
+            2,
+            1,
+            1,
+            1,
+            com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
+            com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            null,
+            null,
+            null));
 
-        mainPanel.add(syncButton, new com.intellij.uiDesigner.core.GridConstraints(5, 1, 1, 1,
-                com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER,
-                com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null));
+    mainPanel.add(
+        label4,
+        new com.intellij.uiDesigner.core.GridConstraints(
+            3,
+            0,
+            1,
+            1,
+            com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
+            com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            null,
+            null,
+            null));
+    mainPanel.add(
+        remotePathField,
+        new com.intellij.uiDesigner.core.GridConstraints(
+            3,
+            1,
+            1,
+            1,
+            com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
+            com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            null,
+            null,
+            null));
 
-        mainPanel.add(statusLabel, new com.intellij.uiDesigner.core.GridConstraints(6, 0, 1, 2,
-                com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
-                com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
-                com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null));
-    }
+    mainPanel.add(
+        label5,
+        new com.intellij.uiDesigner.core.GridConstraints(
+            4,
+            0,
+            1,
+            1,
+            com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
+            com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            null,
+            null,
+            null));
+    mainPanel.add(
+        branchField,
+        new com.intellij.uiDesigner.core.GridConstraints(
+            4,
+            1,
+            1,
+            1,
+            com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
+            com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            null,
+            null,
+            null));
 
+    mainPanel.add(
+        syncButton,
+        new com.intellij.uiDesigner.core.GridConstraints(
+            5,
+            1,
+            1,
+            1,
+            com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER,
+            com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            null,
+            null,
+            null));
 
+    mainPanel.add(
+        statusLabel,
+        new com.intellij.uiDesigner.core.GridConstraints(
+            6,
+            0,
+            1,
+            2,
+            com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
+            com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
+            com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+            null,
+            null,
+            null));
+  }
 }

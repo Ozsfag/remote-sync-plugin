@@ -9,10 +9,10 @@ import com.intellij.ui.content.ContentFactory;
 import org.jetbrains.annotations.NotNull;
 
 public class RemoteSyncToolWindowFactory implements ToolWindowFactory, DumbAware {
-    @Override
-    public void createToolWindowContent(@NotNull Project project, ToolWindow toolWindow) {
-        RemoteSyncPanel panel = new RemoteSyncPanel(project);
-        Content content = ContentFactory.getInstance().createContent(panel.getContent(), "", false);
-        toolWindow.getContentManager().addContent(content);
-    }
+  @Override
+  public void createToolWindowContent(@NotNull Project project, ToolWindow toolWindow) {
+    RemoteSyncPanel panel = new RemoteSyncPanel(project);
+    Content content = ContentFactory.getInstance().createContent(panel.getContent(), "", false);
+    toolWindow.getContentManager().addContent(content);
+  }
 }
