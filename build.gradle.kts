@@ -17,10 +17,8 @@ dependencies {
         intellijIdeaCommunity("2025.1.4")
     }
 
-    // Внешние зависимости
     implementation("com.jcraft:jsch:0.1.55")
-    // implementation("org.eclipse.jgit:org.eclipse.jgit:6.8.0.202311291450-r")
-    implementation("org.projectlombok:lombok:1.18.32")
+    compileOnly("org.projectlombok:lombok:1.18.32")
     annotationProcessor("org.projectlombok:lombok:1.18.32")
 }
 

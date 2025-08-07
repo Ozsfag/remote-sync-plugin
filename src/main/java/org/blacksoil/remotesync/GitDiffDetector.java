@@ -3,20 +3,23 @@ package org.blacksoil.remotesync;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
-import org.blacksoil.remotesync.validator.InputValidator;
 
-@Slf4j
+import com.intellij.openapi.diagnostic.Logger;
+import org.blacksoil.remotesync.validator.GitDiffValidator;
+
+
 public class GitDiffDetector {
+  private static final Logger LOG = Logger.getInstance(GitDiffDetector.class);
 
   public record DiffResult(List<String> addedOrModified, List<String> deleted) {}
 
   public static DiffResult getChangedFiles(String projectDir, String branch) {
-    if (InputValidator.isValid(projectDir, branch)) {
-      log.warn("Invalid input: projectDir='{}', branch='{}'", projectDir, branch);
+    if (GitDiffValidator.isValid(projectDir, branch)) {
+      LOG.warn(String.format("Invalid input: projectDir=%s, branch=%s", projectDir, branch));
       return new DiffResult(List.of(), List.of());
     }
 
@@ -52,11 +55,11 @@ public class GitDiffDetector {
 
       int exitCode = process.waitFor();
       if (exitCode != 0) {
-        log.warn("Git command exited with code {}: {}", exitCode, String.join(" ", command));
+        LOG.warn(MessageFormat.format("Git command exited with code {0}: {1}", exitCode, String.join(" ", command)));
       }
 
     } catch (Exception e) {
-      log.error("Git command failed: {}", String.join(" ", args), e);
+      LOG.error(MessageFormat.format("Git command failed: {0}", String.join(" ", args), e));
     }
 
     return result;

@@ -2,9 +2,8 @@ package org.blacksoil.remotesync;
 
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
-import org.jetbrains.annotations.NotNull;
-
 import javax.swing.*;
+import org.jetbrains.annotations.NotNull;
 
 @State(
     name = "RemoteSyncSettings",
@@ -35,8 +34,12 @@ public class RemoteSyncSettings implements PersistentStateComponent<RemoteSyncSe
     public String branch = "";
   }
 
-  public void applyFromUI(JTextField usernameField, JTextField hostField, JTextField keyPathField,
-                          JTextField remotePathField, JTextField branchField) {
+  public void applyFromUI(
+      JTextField usernameField,
+      JTextField hostField,
+      JTextField keyPathField,
+      JTextField remotePathField,
+      JTextField branchField) {
     state.username = usernameField.getText().trim();
     state.host = hostField.getText().trim();
     state.privateKeyPath = keyPathField.getText().trim();
