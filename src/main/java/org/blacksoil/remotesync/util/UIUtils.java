@@ -1,14 +1,11 @@
 package org.blacksoil.remotesync.util;
 
 import com.intellij.uiDesigner.core.GridConstraints;
-import java.awt.*;
 import javax.swing.*;
-import lombok.experimental.UtilityClass;
 
-@UtilityClass
 public class UIUtils {
 
-  public JTextField addLabeledTextField(JPanel panel, int row, String labelText) {
+  public static JTextField addLabeledTextField(JPanel panel, int row, String labelText) {
     JLabel label = new JLabel(labelText);
     JTextField field = new JTextField();
 
@@ -18,15 +15,15 @@ public class UIUtils {
     return field;
   }
 
-  public GridConstraints constraints(int row, int col) {
+  public static GridConstraints constraints(int row, int col) {
     return constraints(row, col, 1, false);
   }
 
-  public GridConstraints constraints(int row, int col, boolean growX) {
+  public static GridConstraints constraints(int row, int col, boolean growX) {
     return constraints(row, col, 1, growX);
   }
 
-  public GridConstraints constraints(int row, int col, int colSpan, boolean growX) {
+  public static GridConstraints constraints(int row, int col, int colSpan, boolean growX) {
     return new GridConstraints(
         row,
         col,

@@ -1,5 +1,6 @@
 package org.blacksoil.remotesync;
 
+import com.intellij.openapi.diagnostic.Logger;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
@@ -7,10 +8,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import com.intellij.openapi.diagnostic.Logger;
 import org.blacksoil.remotesync.validator.GitDiffValidator;
-
 
 public class GitDiffDetector {
   private static final Logger LOG = Logger.getInstance(GitDiffDetector.class);
@@ -55,7 +53,9 @@ public class GitDiffDetector {
 
       int exitCode = process.waitFor();
       if (exitCode != 0) {
-        LOG.warn(MessageFormat.format("Git command exited with code {0}: {1}", exitCode, String.join(" ", command)));
+        LOG.warn(
+            MessageFormat.format(
+                "Git command exited with code {0}: {1}", exitCode, String.join(" ", command)));
       }
 
     } catch (Exception e) {

@@ -10,6 +10,8 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Objects;
 import javax.swing.*;
+import org.blacksoil.remotesync.service.RemoteSyncService;
+import org.blacksoil.remotesync.settings.RemoteSyncSettings;
 import org.blacksoil.remotesync.validator.PanelValidator;
 
 public class RemoteSyncPanel {

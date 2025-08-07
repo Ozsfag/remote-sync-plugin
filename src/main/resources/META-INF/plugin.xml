@@ -1,18 +1,25 @@
 <idea-plugin>
     <id>org.blacksoil.remotesync</id>
     <name>Remote Sync</name>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <vendor email="emeliangaiday@gmail.com">BlackSoil</vendor>
 
-    <description>
-        Automatically detects and uploads changed files from your local Git working directory
-        to a remote server over SSH. Supports syncing additions, modifications, and deletions.
-    </description>
+    <description><![CDATA[
+        Sync your Git changes to a remote server over SSH with ease.<br/>
+        • Uploads new and modified files<br/>
+        • Deletes removed files on the remote<br/>
+        • Works directly from your Git working directory
+    ]]></description>
+
+    <change-notes><![CDATA[
+        Initial release of Remote Sync plugin.
+    ]]></change-notes>
+
+    <idea-version since-build="223" until-build="241.*"/>
 
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Tool Window -->
         <toolWindow id="Remote Sync"
                     anchor="bottom"
                     factoryClass="org.blacksoil.remotesync.factory.RemoteSyncToolWindowFactory"
@@ -20,7 +27,7 @@
 
         <!-- Project-level service (settings) -->
         <projectService
-                serviceInterface="org.blacksoil.remotesync.RemoteSyncSettings"
-                serviceImplementation="org.blacksoil.remotesync.RemoteSyncSettings"/>
+                serviceInterface="org.blacksoil.remotesync.settings.RemoteSyncSettings"
+                serviceImplementation="org.blacksoil.remotesync.settings.RemoteSyncSettings"/>
     </extensions>
 </idea-plugin>

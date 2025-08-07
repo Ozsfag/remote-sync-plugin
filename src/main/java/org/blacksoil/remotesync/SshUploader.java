@@ -1,7 +1,9 @@
 package org.blacksoil.remotesync;
 
 import com.intellij.openapi.diagnostic.Logger;
-import com.jcraft.jsch.*;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.OutputStream;
