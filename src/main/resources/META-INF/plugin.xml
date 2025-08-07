@@ -15,7 +15,7 @@
         <!-- Tool Window -->
         <toolWindow id="Remote Sync"
                     anchor="bottom"
-                    factoryClass="org.blacksoil.remotesync.RemoteSyncToolWindowFactory"
+                    factoryClass="org.blacksoil.remotesync.factory.RemoteSyncToolWindowFactory"
                     icon="/icons/icon.svg"/>
 
         <!-- Project-level service (settings) -->
