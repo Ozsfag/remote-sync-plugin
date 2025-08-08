@@ -24,8 +24,6 @@
                     anchor="bottom"
                     factoryClass="org.blacksoil.remotesync.factory.RemoteSyncToolWindowFactory"
                     icon="/icons/icon.svg"/>
-
-        <!-- Project-level service (settings) -->
         <projectService
                 serviceInterface="org.blacksoil.remotesync.settings.RemoteSyncSettings"
                 serviceImplementation="org.blacksoil.remotesync.settings.RemoteSyncSettings"/>

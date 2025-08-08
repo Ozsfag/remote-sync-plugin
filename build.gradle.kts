@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.blacksoil.remotesync"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -29,7 +29,7 @@ intellijPlatform {
             • Works directly from your Git working directory
             """.trimIndent()
         )
-        version.set("1.0.1")
+        version.set(project.version.toString())
         vendor {
             name.set("BlackSoil")
             email.set("emeliangaiday@gmail.com")
@@ -41,7 +41,6 @@ tasks.processResources {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-// Важно! Чтобы ресурсы подтягивались:
 sourceSets {
     main {
         resources.srcDirs("src/main/resources")
