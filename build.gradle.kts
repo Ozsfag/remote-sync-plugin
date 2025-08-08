@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.blacksoil.remotesync"
-version = "1.0.1"
+version = "1.1.1"
 
 repositories {
     mavenCentral()
@@ -16,25 +16,6 @@ dependencies {
         intellijIdeaCommunity("2025.1.4")
     }
     implementation("com.jcraft:jsch:0.1.55")
-}
-
-intellijPlatform {
-    pluginConfiguration {
-        name.set("Remote Sync")
-        description.set(
-            """
-            Sync your Git changes to a remote server over SSH with ease.<br/>
-            • Uploads new and modified files<br/>
-            • Deletes removed files on the remote<br/>
-            • Works directly from your Git working directory
-            """.trimIndent()
-        )
-        version.set(project.version.toString())
-        vendor {
-            name.set("BlackSoil")
-            email.set("emeliangaiday@gmail.com")
-        }
-    }
 }
 
 tasks.processResources {
