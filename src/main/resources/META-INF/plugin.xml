@@ -2,35 +2,48 @@
     <id>org.blacksoil.remotesync</id>
     <name>Remote Sync</name>
     <version>1.1.1</version>
-    <vendor email="emeliangaiday@gmail.com">BlackSoil</vendor>
 
+    <vendor email="emeliangaiday@gmail.com" url="https://github.com/Ozsfag">BlackSoil</vendor>
+
+    <!-- Краткое, однострочное описание -->
     <description><![CDATA[
-        Sync your Git changes to a remote server over SSH with ease.<br/>
-        • Uploads new and modified files<br/>
-        • Deletes removed files on the remote<br/>
-        • Works directly from your Git working directory
-    ]]></description>
+    Upload and sync local Git changes to a remote server over SSH — no SFTP/FTP needed.
+  ]]></description>
 
+    <!-- Расширенные заметки о релизах -->
     <change-notes><![CDATA[
-        Initial release of Remote Sync plugin.
-    ]]></change-notes>
+    <ul>
+      <li><b>1.1.1</b> – Improved configuration UI and SSH error feedback</li>
+    </ul>
+  ]]></change-notes>
 
-    <idea-version since-build="223" until-build="241.*"/>
+    <!-- Совместимость с версиями IDE -->
+    <idea-version since-build="223" until-build="241.*" />
 
+    <!-- Зависимости -->
     <depends>com.intellij.modules.platform</depends>
 
+    <!-- Расширения -->
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="Remote Sync"
-                    anchor="bottom"
-                    factoryClass="org.blacksoil.remotesync.factory.RemoteSyncToolWindowFactory"
-                    icon="/icons/icon.svg"/>
+
+        <!-- Tool Window -->
+        <toolWindow
+                id="Remote Sync"
+                anchor="bottom"
+                factoryClass="org.blacksoil.remotesync.factory.RemoteSyncToolWindowFactory"
+                icon="/icons/icon.svg" />
+
+        <!-- Сервис хранения состояния -->
         <projectService
                 serviceInterface="org.blacksoil.remotesync.settings.RemoteSyncSettings"
-                serviceImplementation="org.blacksoil.remotesync.settings.RemoteSyncSettings"/>
+                serviceImplementation="org.blacksoil.remotesync.settings.RemoteSyncSettings" />
+
+        <!-- Конфигурация настроек -->
         <projectConfigurable
-                instance="org.blacksoil.remotesync.settings.RemoteSyncSettingsConfigurable"
                 id="org.blacksoil.remotesync.settings"
                 displayName="Remote Sync"
-                parentId="project"/>
+                instance="org.blacksoil.remotesync.settings.RemoteSyncSettingsConfigurable"
+                parentId="tools" />
+
     </extensions>
 </idea-plugin>
