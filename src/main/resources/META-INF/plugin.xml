@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>org.blacksoil.remotesync</id>
     <name>Remote Sync</name>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
 
     <vendor email="emeliangaiday@gmail.com" url="https://github.com/Ozsfag">BlackSoil</vendor>
 
@@ -13,12 +13,13 @@
     <!-- Расширенные заметки о релизах -->
     <change-notes><![CDATA[
     <ul>
+      <li><b>1.1.2</b> – Improved CI</li>
       <li><b>1.1.1</b> – Improved configuration UI and SSH error feedback</li>
     </ul>
   ]]></change-notes>
 
     <!-- Совместимость с версиями IDE -->
-    <idea-version since-build="223" until-build="241.*" />
+    <idea-version since-build="223" until-build="241.*"/>
 
     <!-- Зависимости -->
     <depends>com.intellij.modules.platform</depends>
@@ -31,19 +32,19 @@
                 id="Remote Sync"
                 anchor="bottom"
                 factoryClass="org.blacksoil.remotesync.factory.RemoteSyncToolWindowFactory"
-                icon="/icons/icon.svg" />
+                icon="/icons/icon.svg"/>
 
         <!-- Сервис хранения состояния -->
         <projectService
                 serviceInterface="org.blacksoil.remotesync.settings.RemoteSyncSettings"
-                serviceImplementation="org.blacksoil.remotesync.settings.RemoteSyncSettings" />
+                serviceImplementation="org.blacksoil.remotesync.settings.RemoteSyncSettings"/>
 
         <!-- Конфигурация настроек -->
         <projectConfigurable
                 id="org.blacksoil.remotesync.settings"
                 displayName="Remote Sync"
                 instance="org.blacksoil.remotesync.settings.RemoteSyncSettingsConfigurable"
-                parentId="tools" />
+                parentId="tools"/>
 
     </extensions>
 </idea-plugin>
