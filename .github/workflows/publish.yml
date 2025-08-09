@@ -1,7 +1,7 @@
 name: Build & Publish to JetBrains Marketplace
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch: { }
   push:
     tags:
       - 'v*'        # публикация при пуше тега вида v1.2.3

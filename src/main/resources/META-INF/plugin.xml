@@ -13,6 +13,7 @@
     <!-- Расширенные заметки о релизах -->
     <change-notes><![CDATA[
     <ul>
+      <li><b>1.1.3</b> – Refactoring project</li>
       <li><b>1.1.2</b> – Improved CI</li>
       <li><b>1.1.1</b> – Improved configuration UI and SSH error feedback</li>
     </ul>

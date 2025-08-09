@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.blacksoil.remotesync"
-version = "1.1.2"
+version = "1.1.3"
 
 repositories {
     mavenCentral()
@@ -26,10 +26,8 @@ java {
 }
 
 intellijPlatform {
-    // (не обязательно, но удобно централизовать мета‑инфо)
     pluginConfiguration {
         name.set("Remote Sync")
-        description.set("Syncs local changes to a remote server over SSH")
         version.set(project.version.toString())
         vendor {
             name.set("BlackSoil")
@@ -37,14 +35,13 @@ intellijPlatform {
         }
     }
 
-    // ✅ Публикация на Marketplace — подпишется сервером автоматически
+    // Маркетплейс сам подпишет и опубликует по токену
     publishing {
-        // передаётся через переменную окружения JB_PUBLISH_TOKEN
         token.set(providers.environmentVariable("JB_PUBLISH_TOKEN"))
-        // channels.set(listOf("default")) // при необходимости
+        // channels.set(listOf("default"))
     }
 
-    // Если когда‑нибудь решишь подписывать локально — раскомментируй:
+    // Если когда‑нибудь решишь подписывать локально:
     // signing {
     //     certificateChain.set(layout.projectDirectory.file("certs/chain.crt").asFile.readText())
     //     privateKey.set(layout.projectDirectory.file("certs/private_key.pem").asFile.readText())
@@ -60,4 +57,9 @@ sourceSets {
     main {
         resources.srcDirs("src/main/resources")
     }
+}
+
+// Удобный агрегирующий таск для CI/локально
+tasks.register("publishRelease") {
+    dependsOn("buildPlugin", "signPlugin", "publishPlugin")
 }
