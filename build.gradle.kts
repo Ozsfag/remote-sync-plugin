@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("org.jetbrains.intellij.platform") version "2.7.0"
+    id("org.jetbrains.intellij.platform") version "2.7.1"
 }
 
 group = "org.blacksoil.remotesync"
@@ -13,7 +13,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdeaCommunity("2025.1.4")
+        intellijIdeaCommunity("2025.2")
     }
     implementation("com.jcraft:jsch:0.1.55")
 }

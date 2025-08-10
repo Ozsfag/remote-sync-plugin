@@ -3,6 +3,8 @@ package org.blacksoil.remotesync;
 import static org.blacksoil.remotesync.util.UIUtils.addLabeledTextField;
 import static org.blacksoil.remotesync.util.UIUtils.constraints;
 
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.ui.JBUI;
@@ -10,15 +12,17 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Objects;
 import javax.swing.*;
+import org.blacksoil.remotesync.secret.Secrets;
 import org.blacksoil.remotesync.service.RemoteSyncService;
 import org.blacksoil.remotesync.settings.RemoteSyncSettings;
 import org.blacksoil.remotesync.validator.PanelValidator;
+import org.jetbrains.annotations.NotNull;
 
 public class RemoteSyncPanel {
   private JPanel mainPanel;
   private JTextField usernameField;
-  private JTextField hostField;
-  private JTextField keyPathField;
+  private JTextField ipField;
+  private JTextField passwordField;
   private JTextField remotePathField;
   private JTextField branchField;
   private JButton syncButton;
@@ -27,13 +31,14 @@ public class RemoteSyncPanel {
 
   public RemoteSyncPanel(Project project) {
     initUI();
-    applyLookAndFeel(); // <-- FlatLaf
+    applyLookAndFeel();
     setToolTips();
 
     RemoteSyncSettings settings = RemoteSyncSettings.getInstance(project);
     RemoteSyncSettings.State state = Objects.requireNonNull(settings.getState());
 
-    loadStateToUI(state);
+    Secrets.savePassword(project, state.ip, state.username, passwordField.getText());
+    writeForm(state, project);
     setupSyncAction(project, settings);
   }
 
@@ -41,8 +46,8 @@ public class RemoteSyncPanel {
     mainPanel = new JPanel(new GridLayoutManager(8, 2, JBUI.insets(10), -1, -1));
 
     usernameField = addLabeledTextField(mainPanel, 0, "Username:");
-    hostField = addLabeledTextField(mainPanel, 1, "IP:");
-    keyPathField = addLabeledTextField(mainPanel, 2, "Password:");
+    ipField = addLabeledTextField(mainPanel, 1, "IP:");
+    passwordField = addLabeledTextField(mainPanel, 2, "Password:");
     remotePathField = addLabeledTextField(mainPanel, 3, "Git Remote Path:");
     branchField = addLabeledTextField(mainPanel, 4, "Git Branch:");
 
@@ -60,9 +65,22 @@ public class RemoteSyncPanel {
     setupEnterKeyShortcut();
   }
 
+  private void setupEnterKeyShortcut() {
+    ActionListener enterListener =
+        e -> {
+          if (syncButton.isEnabled()) syncButton.doClick();
+        };
+
+    usernameField.addActionListener(enterListener);
+    ipField.addActionListener(enterListener);
+    passwordField.addActionListener(enterListener);
+    remotePathField.addActionListener(enterListener);
+    branchField.addActionListener(enterListener);
+  }
+
   private void applyLookAndFeel() {
     try {
-      UIManager.setLookAndFeel(UIManager.getLookAndFeel()); // respect IntelliJ theme
+      UIManager.setLookAndFeel(UIManager.getLookAndFeel());
       SwingUtilities.updateComponentTreeUI(mainPanel);
     } catch (Exception ignored) {
     }
@@ -70,16 +88,16 @@ public class RemoteSyncPanel {
 
   private void setToolTips() {
     usernameField.setToolTipText("Username for SSH login");
-    hostField.setToolTipText("Remote server IP or hostname");
-    keyPathField.setToolTipText("Path to your private SSH key");
+    ipField.setToolTipText("Remote server IP or hostname");
+    passwordField.setToolTipText("Path to your private SSH key");
     remotePathField.setToolTipText("Remote directory where files will be synced");
     branchField.setToolTipText("Git branch to compare changes against (e.g., main)");
   }
 
-  private void loadStateToUI(RemoteSyncSettings.State state) {
+  private void writeForm(RemoteSyncSettings.State state, Project project) {
     usernameField.setText(state.username);
-    hostField.setText(state.host);
-    keyPathField.setText(state.privateKeyPath);
+    ipField.setText(state.ip);
+    passwordField.setText(Secrets.loadPassword(project, state.ip, state.username));
     remotePathField.setText(state.remotePath);
     branchField.setText(state.branch != null ? state.branch : "main");
   }
@@ -91,52 +109,47 @@ public class RemoteSyncPanel {
           setUiEnabled(false);
 
           if (!PanelValidator.isValid(
-              usernameField, hostField, keyPathField, remotePathField, branchField)) {
+              usernameField, ipField, passwordField, remotePathField, branchField)) {
             updateStatus("Please fill in all required fields.");
             setUiEnabled(true);
             return;
           }
 
-          settings.applyFromUI(
-              usernameField, hostField, keyPathField, remotePathField, branchField);
+          persist(project, settings);
           setCursorWait(true);
 
-          RemoteSyncService.sync(
-              project,
-              settings.getState(),
-              new RemoteSyncService.SyncCallback() {
-                @Override
-                public void onStatus(String msg) {
-                  updateStatus(msg);
-                }
+          new Task.Backgroundable(project, "Remote sync", true) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+              RemoteSyncService.sync(
+                  project,
+                  settings.getState(),
+                  new RemoteSyncService.SyncCallback() {
+                    @Override
+                    public void onStatus(String msg) {
+                      indicator.setText(msg);
+                      updateStatus(msg);
+                    }
 
-                @Override
-                public void onError(String err) {
-                  updateStatus(err);
-                  setUiEnabled(true);
-                  setCursorWait(false);
-                }
+                    @Override
+                    public void onError(String err) {
+                      updateStatus(err);
+                    }
 
-                @Override
-                public void onComplete() {
-                  setUiEnabled(true);
-                  setCursorWait(false);
-                }
-              });
+                    @Override
+                    public void onComplete() {
+                      updateStatus("Sync complete.");
+                    }
+                  });
+            }
+
+            @Override
+            public void onFinished() {
+              setUiEnabled(true);
+              setCursorWait(false);
+            }
+          }.queue();
         });
-  }
-
-  private void setupEnterKeyShortcut() {
-    ActionListener enterListener =
-        e -> {
-          if (syncButton.isEnabled()) syncButton.doClick();
-        };
-
-    usernameField.addActionListener(enterListener);
-    hostField.addActionListener(enterListener);
-    keyPathField.addActionListener(enterListener);
-    remotePathField.addActionListener(enterListener);
-    branchField.addActionListener(enterListener);
   }
 
   private void updateStatus(String message) {
@@ -149,6 +162,22 @@ public class RemoteSyncPanel {
           syncButton.setEnabled(enabled);
           progressBar.setVisible(!enabled);
         });
+  }
+
+  private void persist(Project project, RemoteSyncSettings settings) {
+    RemoteSyncSettings.State newState = readForm();
+    settings.loadState(newState);
+    String pwd = passwordField.getText();
+    Secrets.savePassword(project, newState.ip, newState.username, pwd);
+  }
+
+  private RemoteSyncSettings.State readForm() {
+    RemoteSyncSettings.State s = new RemoteSyncSettings.State();
+    s.username = usernameField.getText().trim();
+    s.ip = ipField.getText().trim();
+    s.remotePath = remotePathField.getText().trim();
+    s.branch = branchField.getText().trim();
+    return s;
   }
 
   private void setCursorWait(boolean wait) {

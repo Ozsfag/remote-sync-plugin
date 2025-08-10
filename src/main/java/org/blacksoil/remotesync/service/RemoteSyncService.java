@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import java.util.List;
 import org.blacksoil.remotesync.GitDiffDetector;
 import org.blacksoil.remotesync.SshUploader;
+import org.blacksoil.remotesync.secret.Secrets;
 import org.blacksoil.remotesync.settings.RemoteSyncSettings;
 
 public class RemoteSyncService {
@@ -25,6 +26,7 @@ public class RemoteSyncService {
       return;
     }
 
+    String password = Secrets.loadPassword(project, state.ip, state.username);
     try {
       callback.onStatus("Detecting changes...");
       String projectPath = project.getBasePath();
@@ -42,18 +44,12 @@ public class RemoteSyncService {
       if (!changed.isEmpty()) {
         callback.onStatus("Uploading " + changed.size() + " file(s)...");
         SshUploader.uploadFiles(
-            changed,
-            projectPath,
-            state.remotePath,
-            state.host,
-            state.username,
-            state.privateKeyPath);
+            changed, projectPath, state.remotePath, state.ip, state.username, password);
       }
 
       if (!deleted.isEmpty()) {
         callback.onStatus("Deleting " + deleted.size() + " file(s)...");
-        SshUploader.deleteFiles(
-            deleted, state.remotePath, state.host, state.username, state.privateKeyPath);
+        SshUploader.deleteFiles(deleted, state.remotePath, state.ip, state.username, password);
       }
 
       callback.onStatus("Sync complete.");
