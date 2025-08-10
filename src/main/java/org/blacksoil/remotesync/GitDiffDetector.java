@@ -13,8 +13,6 @@ import org.blacksoil.remotesync.validator.GitDiffValidator;
 public class GitDiffDetector {
   private static final Logger LOG = Logger.getInstance(GitDiffDetector.class);
 
-  public record DiffResult(List<String> addedOrModified, List<String> deleted) {}
-
   public static DiffResult getChangedFiles(String projectDir, String branch) {
     if (GitDiffValidator.isValid(projectDir, branch)) {
       LOG.warn(String.format("Invalid input: projectDir=%s, branch=%s", projectDir, branch));
@@ -64,4 +62,6 @@ public class GitDiffDetector {
 
     return result;
   }
+
+  public record DiffResult(List<String> addedOrModified, List<String> deleted) {}
 }

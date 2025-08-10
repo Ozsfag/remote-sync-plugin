@@ -31,7 +31,7 @@ public final class WelcomeFileEditor extends UserDataHolderBase implements FileE
     panel = new JPanel(new BorderLayout());
     String version = pluginVersion();
 
-    URL welcomeUrl = getRes("/welcome/welcome.html");
+    URL welcomeUrl = getRes("/docs/welcome.html");
     URL fallbackUrl = getRes("/welcome/fallback.html");
 
     if (JBCefApp.isSupported()) {

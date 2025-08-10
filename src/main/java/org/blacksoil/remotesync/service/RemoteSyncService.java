@@ -11,14 +11,6 @@ import org.blacksoil.remotesync.settings.RemoteSyncSettings;
 public class RemoteSyncService {
   private static final Logger LOG = Logger.getInstance(RemoteSyncService.class);
 
-  public interface SyncCallback {
-    void onStatus(String message);
-
-    void onError(String error);
-
-    void onComplete();
-  }
-
   public static void sync(Project project, RemoteSyncSettings.State state, SyncCallback callback) {
     if (project == null || state == null || project.getBasePath() == null) {
       LOG.warn("Invalid sync parameters.");
@@ -59,5 +51,13 @@ public class RemoteSyncService {
       LOG.error("Remote sync failed", e);
       callback.onError("Sync failed: " + e.getMessage());
     }
+  }
+
+  public interface SyncCallback {
+    void onStatus(String message);
+
+    void onError(String error);
+
+    void onComplete();
   }
 }

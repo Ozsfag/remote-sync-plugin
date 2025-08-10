@@ -9,6 +9,8 @@ import org.jetbrains.annotations.Nullable;
 public final class Secrets {
   private static final String SERVICE = "Remote Sync";
 
+  private Secrets() {}
+
   private static String key(Project project, String host, String user) {
     return SERVICE + "@" + project.getLocationHash() + ":" + user + "@" + host;
   }
@@ -24,6 +26,4 @@ public final class Secrets {
     if (creds == null || creds.getPasswordAsString() == null) return null;
     return creds.getPasswordAsString();
   }
-
-  private Secrets() {}
 }

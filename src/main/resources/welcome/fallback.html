@@ -2,35 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta content="width=device-width,initial-scale=1" name="viewport"/>
     <title>Remote Sync — Fallback</title>
-    <link rel="stylesheet" href="./base.css">
+    <link href="./base.css" rel="stylesheet">
 </head>
 <body>
 <div class="wrap">
     <div class="card">
         <header class="hero">
-            <svg class="logo" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <defs><linearGradient id="gf" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#3d7eff"/><stop offset="1" stop-color="#7c5cff"/></linearGradient></defs>
-                <path d="M4 7h10a4 4 0 0 1 0 8H8" stroke="url(#gf)" stroke-width="2" stroke-linecap="round"/>
-                <path d="M8 11h6" stroke="#9fb3ff" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="8" cy="15" r="2" fill="#9fb3ff"/>
+            <svg aria-hidden="true" class="logo" fill="none" viewBox="0 0 24 24">
+                <defs>
+                    <linearGradient id="gf" x1="0" x2="24" y1="0" y2="24">
+                        <stop stop-color="#3d7eff"/>
+                        <stop offset="1" stop-color="#7c5cff"/>
+                    </linearGradient>
+                </defs>
+                <path d="M4 7h10a4 4 0 0 1 0 8H8" stroke="url(#gf)" stroke-linecap="round" stroke-width="2"/>
+                <path d="M8 11h6" stroke="#9fb3ff" stroke-linecap="round" stroke-width="2"/>
+                <circle cx="8" cy="15" fill="#9fb3ff" r="2"/>
             </svg>
             <h1>Remote Sync <span class="ver">v${version}</span></h1>
-            <p class="lead">The main welcome page isn’t available right now. Add it at <code>resources/welcome/welcome.html</code>. Meanwhile, here are quick links and live stats.</p>
+            <p class="lead">The main welcome page isn’t available right now. Meanwhile, here are quick links and live
+                stats.</p>
         </header>
 
         <div class="action-block">
             <div class="button-row">
-                <a class="btn primary" href="https://your.site/getting-started" target="_blank" rel="noopener">🚀 <span class="btn-text">Getting Started</span></a>
-                <a class="btn sponsor" href="https://your.site/sponsor" target="_blank" rel="noopener">❤ <span class="btn-text">Become a Sponsor</span></a>
-                <a class="btn secondary" href="https://your.site/docs" target="_blank" rel="noopener">📄 <span class="btn-text">Docs</span></a>
-                <a class="btn ghost" href="https://your.site/issues" target="_blank" rel="noopener">🐞 <span class="btn-text">Report issue</span></a>
+                <a class="btn primary" href="https://your.site/getting-started" rel="noopener" target="_blank">🚀 <span
+                        class="btn-text">Getting Started</span></a>
+                <a class="btn sponsor" href="https://your.site/sponsor" rel="noopener" target="_blank">❤ <span
+                        class="btn-text">Become a Sponsor</span></a>
+                <a class="btn secondary" href="https://your.site/docs" rel="noopener" target="_blank">📄 <span
+                        class="btn-text">Docs</span></a>
+                <a class="btn ghost" href="https://your.site/issues" rel="noopener" target="_blank">🐞 <span
+                        class="btn-text">Report issue</span></a>
             </div>
 
             <div class="stats">
-                <div class="stat"><b id="downloads-month">–</b><div class="muted">downloads this month</div></div>
-                <div class="stat"><b id="sponsors-count">–</b><div class="muted">developers sponsored</div></div>
+                <div class="stat"><b id="downloads-month">–</b>
+                    <div class="muted">downloads this month</div>
+                </div>
+                <div class="stat"><b id="sponsors-count">–</b>
+                    <div class="muted">developers sponsored</div>
+                </div>
+            </div>
+
+            <!-- Добавлено: live stats из backend -->
+            <div class="stats"
+                 data-endpoint="http://localhost:9090/api/marketplace/stats"
+                 data-plugin-id="org.blacksoil.remotesync">
+                <div class="stat"><b id="mp-downloads-total">–</b>
+                    <div class="muted">total downloads</div>
+                </div>
+                <div class="stat"><b id="mp-version">–</b>
+                    <div class="muted">latest version</div>
+                </div>
             </div>
 
             <div class="goal" data-current="0" data-target="100">
@@ -42,6 +68,7 @@
         </div>
     </div>
 </div>
+<script src="./marketplace-stats.js"></script>
 <script src="./base.js"></script>
 </body>
 </html>

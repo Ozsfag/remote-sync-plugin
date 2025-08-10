@@ -11,23 +11,25 @@ import com.intellij.openapi.project.ProjectManagerListener;
 import org.jetbrains.annotations.NotNull;
 
 public final class WelcomeProjectListener implements ProjectManagerListener {
-    private static final String PLUGIN_ID = "org.blacksoil.remotesync";
+  private static final String PLUGIN_ID = "org.blacksoil.remotesync";
 
-    @Override
-    @SuppressWarnings("removal")
-    public void projectOpened(@NotNull Project project) {
-        IdeaPluginDescriptor d = PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID));
-        if (d == null) return;
+  @Override
+  @SuppressWarnings("removal")
+  public void projectOpened(@NotNull Project project) {
+    IdeaPluginDescriptor d = PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID));
+    if (d == null) return;
 
-        String key = "remoteSync.welcome.shown." + d.getVersion();
-        PropertiesComponent pc = PropertiesComponent.getInstance(project);
-        if (pc.getBoolean(key, false)) return;
+    String key = "remoteSync.welcome.shown." + d.getVersion();
+    PropertiesComponent pc = PropertiesComponent.getInstance(project);
+    if (pc.getBoolean(key, false)) return;
 
-        // дождёмся Smart Mode (аналог RequiredForSmartMode)
-        DumbService.getInstance(project).runWhenSmart(() -> {
-            if (project.isDisposed()) return;
-            FileEditorManager.getInstance(project).openFile(new WelcomeVirtualFile(), true);
-            pc.setValue(key, true);
-        });
-    }
+    // дождёмся Smart Mode (аналог RequiredForSmartMode)
+    DumbService.getInstance(project)
+        .runWhenSmart(
+            () -> {
+              if (project.isDisposed()) return;
+              FileEditorManager.getInstance(project).openFile(new WelcomeVirtualFile(), true);
+              pc.setValue(key, true);
+            });
+  }
 }
