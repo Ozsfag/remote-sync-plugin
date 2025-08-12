@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.blacksoil.remotesync.backend.client.MarketplaceClient;
-import org.blacksoil.remotesync.backend.dto.PluginStats;
+import org.blacksoil.remotesync.backend.dto.MarketplaceStats;
 import org.blacksoil.remotesync.backend.parser.MarketplaceParser;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -19,7 +19,7 @@ public class MarketplaceService {
 
   private final MarketplaceClient client; // ходит в Marketplace
   private final MarketplaceParser parser; // парсит XML -> DTO
-  private final Cache<String, PluginStats> cache; // Caffeine
+  private final Cache<String, MarketplaceStats> cache; // Caffeine
 
   private static String normalize(String pluginId) {
     if (pluginId == null) return null;
@@ -27,12 +27,12 @@ public class MarketplaceService {
     return PLUGIN_ID_OK.matcher(v).matches() ? v : null;
   }
 
-  public Mono<PluginStats> getStats(String pluginId) {
+  public Mono<MarketplaceStats> getStats(String pluginId) {
     String pid = normalize(pluginId);
-    if (pid == null) return Mono.just(PluginStats.of());
+    if (pid == null) return Mono.just(MarketplaceStats.of());
 
     // cache hit
-    PluginStats cached = cache.getIfPresent(pid);
+    MarketplaceStats cached = cache.getIfPresent(pid);
     if (cached != null) {
       return Mono.just(cached);
     }
@@ -50,7 +50,7 @@ public class MarketplaceService {
         .onErrorResume(
             e -> {
               log.warn("Marketplace request failed for pluginId={}: {}", pid, e.getMessage());
-              return Mono.just(PluginStats.of());
+              return Mono.just(MarketplaceStats.of());
             });
   }
 }

@@ -12,4 +12,5 @@ public class MarketplaceProperties {
   private Duration requestTimeout;
   private Duration cacheTtl;
   private String userAgent;
+  private boolean preferXmlIdLink;
 }

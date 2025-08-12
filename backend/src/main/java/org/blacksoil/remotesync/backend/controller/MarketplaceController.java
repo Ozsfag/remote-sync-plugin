@@ -1,7 +1,7 @@
 package org.blacksoil.remotesync.backend.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.blacksoil.remotesync.backend.dto.PluginStats;
+import org.blacksoil.remotesync.backend.dto.MarketplaceStats;
 import org.blacksoil.remotesync.backend.service.MarketplaceService;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -15,7 +15,7 @@ public class MarketplaceController {
   private final MarketplaceService service;
 
   @GetMapping("/stats")
-  public Mono<PluginStats> stats(@RequestParam String pluginId) {
+  public Mono<MarketplaceStats> stats(@RequestParam String pluginId) {
     return service.getStats(pluginId);
   }
 }

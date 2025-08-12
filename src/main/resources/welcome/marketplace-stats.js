@@ -1,42 +1,51 @@
-// src/main/resources/welcome/marketplace-stats.js
 (function () {
-  function setText(el, val) { if (el && val != null && val !== '') el.textContent = String(val); }
-
-  function updateContainer(container, data) {
-    // Ищем элементы внутри контейнера (есть id, но дадим и fallback по data-field)
-    var elTotal = container.querySelector('#mp-downloads-total') || container.querySelector('[data-field="total-downloads"]');
-    var elVer   = container.querySelector('#mp-version')         || container.querySelector('[data-field="latest-version"]');
-
-    if (elTotal) {
-      var v = data && data.downloads != null ? data.downloads : '—';
-      // если приходит число/строка числа — красиво форматируем
-      var n = Number(v);
-      setText(elTotal, Number.isFinite(n) ? n.toLocaleString() : v);
-    }
-    if (elVer) setText(elVer, (data && data.version) || '—');
+  function setText(el, val) {
+    if (el && val != null && val !== '') el.textContent = String(val);
+  }
+  function formatNumberHuman(v) {
+    if (v == null || v === '') return '–';
+    var n = Number(String(v).replace(/[^\d.-]/g, ''));
+    return Number.isFinite(n) ? n.toLocaleString() : String(v);
   }
 
-  function fetchAndFill(container) {
-    var pluginId = container.getAttribute('data-plugin-id') || 'org.blacksoil.remotesync';
-    var endpoint = container.getAttribute('data-endpoint') || '/api/marketplace/stats';
-    var url = endpoint + '?pluginId=' + encodeURIComponent(pluginId);
+  async function fetchAndFill(container) {
+    var endpoint = container.getAttribute('data-endpoint');
+    var pluginId = container.getAttribute('data-plugin-id');
+    if (!endpoint || !pluginId) return;
 
-    fetch(url, { credentials: 'omit' })
-      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)); })
-      .then(function (j) { updateContainer(container, j || {}); })
-      .catch(function () { /* тихий фолбэк — плейсхолдеры остаются */ });
+    try {
+      var url = new URL(endpoint);
+      url.searchParams.set('pluginId', pluginId);
+      var res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var data = await res.json();
+
+      // Заполняем только то, что получили
+      var elTotal = container.querySelector('#mp-downloads-total');
+      var elVer   = container.querySelector('#mp-version');
+
+      if (elTotal && data.downloads) setText(elTotal, formatNumberHuman(data.downloads));
+      if (elVer && data.version)     setText(elVer, data.version);
+
+      // Расшарим данные для других скриптов
+      window.RemoteSync = window.RemoteSync || {};
+      window.RemoteSync.statsByPluginId = window.RemoteSync.statsByPluginId || {};
+      window.RemoteSync.statsByPluginId[pluginId] = data;
+
+      // Сообщим, что данные пришли
+      document.dispatchEvent(new CustomEvent('marketplace:stats', {
+        detail: { pluginId: pluginId, data: data }
+      }));
+    } catch (e) {
+      // Оставляем "–" по умолчанию
+      // console.warn('Marketplace stats error:', e);
+    }
   }
 
   function init() {
-    // Берём только те .stats, где указан endpoint (чтобы не трогать твой первый блок со «downloads this month»)
-    var containers = document.querySelectorAll('.stats[data-endpoint]');
-    if (!containers.length) return;
-    containers.forEach(fetchAndFill);
+    document.querySelectorAll('.stats[data-endpoint][data-plugin-id]').forEach(fetchAndFill);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();

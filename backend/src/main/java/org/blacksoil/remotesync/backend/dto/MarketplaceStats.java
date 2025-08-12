@@ -3,7 +3,7 @@ package org.blacksoil.remotesync.backend.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PluginStats {
+public class MarketplaceStats {
   public String pluginId;
   public String name;
   public String version;
@@ -14,7 +14,7 @@ public class PluginStats {
   public String link; // ссылка на страницу плагина
   public String iconUrl; // если удастся вытащить
 
-  public static PluginStats of() {
-    return new PluginStats();
+  public static MarketplaceStats of() {
+    return new MarketplaceStats();
   }
 }
