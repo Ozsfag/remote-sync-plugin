@@ -10,16 +10,10 @@
 <div class="wrap">
     <div class="card">
         <header class="hero">
-            <svg aria-hidden="true" class="logo" fill="none" viewBox="0 0 24 24">
-                <defs>
-                    <linearGradient id="g" x1="0" x2="24" y1="0" y2="24">
-                        <stop stop-color="#3d7eff"/>
-                        <stop offset="1" stop-color="#7c5cff"/>
-                    </linearGradient>
-                </defs>
-                <path d="M4 7h10a4 4 0 0 1 0 8H8" stroke="url(#g)" stroke-linecap="round" stroke-width="2"/>
-                <path d="M8 11h6" stroke="#9fb3ff" stroke-linecap="round" stroke-width="2"/>
-                <circle cx="8" cy="15" fill="#9fb3ff" r="2"/>
+            <svg height="40" viewBox="0 0 40 40" width="40" xmlns="http://www.w3.org/2000/svg">
+                <rect fill="#15171A" height="40" rx="8" width="40"/>
+                <path d="M31 9 L7 20 L18 21 L19 33 L31 9 Z" fill="#67D9FF"/>
+                <path d="M18 21 L26 16 L19 33 Z" fill="#1FB6FF"/>
             </svg>
             <h1>Remote Sync <span class="ver">v${version}</span></h1>
             <p class="lead">Zero-friction SSH sync from your IDE. Faster deploys, fewer context switches.</p>
@@ -27,14 +21,29 @@
 
         <div class="action-block">
             <div class="button-row">
-                <a class="btn primary" href="https://your.site/getting-started" rel="noopener" target="_blank">🚀 <span
-                        class="btn-text">Getting Started</span></a>
-                <a class="btn sponsor" href="https://your.site/sponsor" rel="noopener" target="_blank">❤ <span
-                        class="btn-text">Become a Sponsor</span></a>
-                <a class="btn secondary" href="https://your.site/docs" rel="noopener" target="_blank">📄 <span
-                        class="btn-text">Docs</span></a>
-                <a class="btn ghost" href="https://your.site/issues" rel="noopener" target="_blank">🐞 <span
-                        class="btn-text">Report issue</span></a>
+                <!-- Getting Started → якорь в README с инструкцией -->
+                <a class="btn primary"
+                   href="https://github.com/Ozsfag/remote-sync-plugin#getting-started"
+                   rel="noopener"
+                >🚀 <span class="btn-text">Getting Started</span></a>
+
+                <!-- Донаты → Boosty -->
+                <a class="btn sponsor"
+                   href="https://boosty.to/ozsfag/donate"
+                   rel="noopener"
+                >❤ <span class="btn-text">Become a Sponsor</span></a>
+
+                <!-- Документация → основной README -->
+                <a class="btn secondary"
+                   href="https://github.com/Ozsfag/remote-sync-plugin/blob/main/README.md"
+                   rel="noopener"
+                >📄 <span class="btn-text">Docs</span></a>
+
+                <!-- Репорт багов → Issues -->
+                <a class="btn ghost"
+                   href="https://github.com/Ozsfag/remote-sync-plugin/issues"
+                   rel="noopener"
+                >🐞 <span class="btn-text">Report issue</span></a>
             </div>
 
             <div class="stats">
