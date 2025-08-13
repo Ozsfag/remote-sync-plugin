@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.blacksoil.remotesync.backend.client.MarketplaceClient;
-import org.blacksoil.remotesync.backend.dto.MarketplaceStats;
+import org.blacksoil.remotesync.backend.dto.MarketplaceStatsRecord;
 import org.blacksoil.remotesync.backend.parser.MarketplaceParser;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -17,9 +17,9 @@ public class MarketplaceService {
 
   private static final Pattern PLUGIN_ID_OK = Pattern.compile("^[\\w.\\-]{1,200}$");
 
-  private final MarketplaceClient client; // ходит в Marketplace
-  private final MarketplaceParser parser; // парсит XML -> DTO
-  private final Cache<String, MarketplaceStats> cache; // Caffeine
+  private final MarketplaceClient client;
+  private final MarketplaceParser parser;
+  private final Cache<String, MarketplaceStatsRecord> cache;
 
   private static String normalize(String pluginId) {
     if (pluginId == null) return null;
@@ -27,30 +27,24 @@ public class MarketplaceService {
     return PLUGIN_ID_OK.matcher(v).matches() ? v : null;
   }
 
-  public Mono<MarketplaceStats> getStats(String pluginId) {
+  public Mono<MarketplaceStatsRecord> getStats(String pluginId) {
     String pid = normalize(pluginId);
-    if (pid == null) return Mono.just(MarketplaceStats.of());
+    if (pid == null) return Mono.just(MarketplaceStatsRecord.of());
 
-    // cache hit
-    MarketplaceStats cached = cache.getIfPresent(pid);
+    MarketplaceStatsRecord cached = cache.getIfPresent(pid);
     if (cached != null) {
       return Mono.just(cached);
     }
 
-    // сеть -> парсинг -> кэш
     return client
         .fetchPluginXml(pid)
-        .map(parser::parse)
-        .map(
-            ps -> {
-              ps.pluginId = pid;
-              return ps;
-            })
+        .map(xml -> parser.parse(xml, pid))
+        .map(ps -> ps.withPluginId(pid))
         .doOnNext(ps -> cache.put(pid, ps))
         .onErrorResume(
             e -> {
               log.warn("Marketplace request failed for pluginId={}: {}", pid, e.getMessage());
-              return Mono.just(MarketplaceStats.of());
+              return Mono.just(MarketplaceStatsRecord.of());
             });
   }
 }

@@ -4,115 +4,100 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import lombok.extern.slf4j.Slf4j;
-import org.blacksoil.remotesync.backend.dto.PluginStats;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import org.blacksoil.remotesync.backend.dto.MarketplaceStatsRecord;
+import org.blacksoil.remotesync.backend.parser.resolver.LinkResolver;
+import org.blacksoil.remotesync.backend.parser.util.XmlUtils;
+import org.blacksoil.remotesync.backend.parser.value.MarketplaceXmlValue;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.*;
 
 @Component
-@Slf4j
+@RequiredArgsConstructor
 public class MarketplaceParser {
 
-  private static final DocumentBuilderFactory XML_FACTORY = secureFactory();
+  private final DocumentBuilderFactory documentBuilderFactory;
+  private final LinkResolver linkResolver;
 
-  private static DocumentBuilderFactory secureFactory() {
-    try {
-      DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
-      f.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-      f.setFeature("http://xml.org/sax/features/external-general-entities", false);
-      f.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-      f.setExpandEntityReferences(false);
-      return f;
-    } catch (Exception e) {
-      LoggerFactory.getLogger(MarketplaceParser.class)
-          .error("Failed to init secure XML factory, fallback to default: {}", e.toString());
-      return DocumentBuilderFactory.newInstance();
-    }
+  private static boolean hasText(String s) {
+    return s != null && !s.trim().isEmpty();
   }
 
-  private static String attr(Element e, String n) {
-    return (e != null && e.hasAttribute(n)) ? nz(e.getAttribute(n)) : null;
+  public MarketplaceStatsRecord parse(String xml) {
+    return parse(xml, null);
   }
 
-  private static String text(Element e) {
-    String s = (e != null ? e.getTextContent() : null);
-    return isEmpty(s) ? null : s.trim();
-  }
-
-  private static String first(String... v) {
-    if (v != null) for (String s : v) if (!isEmpty(s)) return s;
-    return null;
-  }
-
-  private static String page(String num, String xmlId) {
-    if (!isEmpty(xmlId)) return "https://plugins.jetbrains.com/plugin/" + xmlId;
-    if (!isEmpty(num)) return "https://plugins.jetbrains.com/plugin/" + num;
-    return null;
-  }
-
-  private static boolean isEmpty(String s) {
-    return s == null || s.trim().isEmpty();
-  }
-
-  private static String nz(String s) {
-    return isEmpty(s) ? null : s;
-  }
-
-  private static Double toDouble(String s) {
-    try {
-      return isEmpty(s) ? null : Double.parseDouble(s);
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-  private static Integer toInt(String s) {
-    try {
-      return isEmpty(s) ? null : Integer.parseInt(s);
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-  public PluginStats parse(String xml) {
-    PluginStats out = PluginStats.of();
+  public MarketplaceStatsRecord parse(String xml, String expectedIdOrXmlId) {
+    MarketplaceStatsRecord out = MarketplaceStatsRecord.of();
     if (xml == null || xml.isBlank()) return out;
 
-    try {
-      DocumentBuilder b = XML_FACTORY.newDocumentBuilder();
-      Document doc = b.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
-      NodeList plugins = doc.getElementsByTagName("plugin");
-      if (plugins.getLength() == 0) return out;
-      return parsePlugin((Element) plugins.item(0));
+    try (var is = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
+      DocumentBuilder b = documentBuilderFactory.newDocumentBuilder();
+      Document doc = b.parse(is);
+      Element plugin = pickPlugin(doc, expectedIdOrXmlId);
+      return plugin != null ? parsePlugin(plugin) : out;
     } catch (Exception e) {
-      log.warn("Failed to parse Marketplace XML: {}", e.toString());
       return out;
     }
   }
 
-  private PluginStats parsePlugin(Element p) {
-    PluginStats ps = PluginStats.of();
+  private Element pickPlugin(Document doc, String expected) {
+    NodeList list = doc.getElementsByTagName(MarketplaceXmlValue.Tag.PLUGIN);
+    if (list.getLength() == 0) return null;
+    if (!hasText(expected)) return (Element) list.item(0);
+    for (int i = 0; i < list.getLength(); i++) {
+      Element e = (Element) list.item(i);
+      String id = XmlUtils.attr(e, MarketplaceXmlValue.Attr.ID);
+      String xmlId = XmlUtils.attr(e, MarketplaceXmlValue.Attr.XML_ID);
+      if (expected.equalsIgnoreCase(xmlId) || expected.equals(id)) return e;
+    }
+    return (Element) list.item(0);
+  }
 
-    ps.name = attr(p, "name");
-    ps.downloads = first(attr(p, "downloads"), attr(p, "downloadsCount"));
-    ps.rating = toDouble(attr(p, "rating"));
-    ps.ratingCount = toInt(attr(p, "votes"));
-    ps.link = first(attr(p, "url"), page(attr(p, "id"), attr(p, "xmlId")));
-    ps.iconUrl = attr(p, "iconUrl");
+  private MarketplaceStatsRecord parsePlugin(Element p) {
+    String name = XmlUtils.attr(p, MarketplaceXmlValue.Attr.NAME);
+    String downloads =
+        XmlUtils.first(
+            XmlUtils.attr(p, MarketplaceXmlValue.Attr.DOWNLOADS),
+            XmlUtils.attr(p, MarketplaceXmlValue.Attr.DOWNLOADS_COUNT));
+    Double rating = XmlUtils.toDouble(XmlUtils.attr(p, MarketplaceXmlValue.Attr.RATING));
+    Integer ratingCount = XmlUtils.toInt(XmlUtils.attr(p, MarketplaceXmlValue.Attr.VOTES));
 
-    String versionAttr = attr(p, "version");
-    if (isEmpty(versionAttr)) {
-      NodeList versions = p.getElementsByTagName("version");
+    String id = XmlUtils.attr(p, MarketplaceXmlValue.Attr.ID);
+    String xmlId = XmlUtils.attr(p, MarketplaceXmlValue.Attr.XML_ID);
+    String url = XmlUtils.attr(p, MarketplaceXmlValue.Attr.URL);
+    String link = linkResolver.resolve(id, xmlId, url);
+
+    String iconUrl = XmlUtils.attr(p, MarketplaceXmlValue.Attr.ICON_URL);
+
+    String version = null;
+    String lastUpdate = null;
+    String versionAttr = XmlUtils.attr(p, MarketplaceXmlValue.Attr.VERSION);
+    if (hasText(versionAttr)) {
+      version = versionAttr;
+      lastUpdate = XmlUtils.attr(p, MarketplaceXmlValue.Attr.UPDATED);
+    } else {
+      NodeList versions = p.getElementsByTagName(MarketplaceXmlValue.Tag.VERSION);
       if (versions.getLength() > 0) {
         Element v = (Element) versions.item(0);
-        ps.version = text(v);
-        ps.lastUpdate = first(attr(v, "date"), attr(v, "updated"), attr(p, "updated"));
+        version = XmlUtils.text(v);
+        lastUpdate =
+            XmlUtils.first(
+                XmlUtils.attr(v, MarketplaceXmlValue.Attr.DATE),
+                XmlUtils.attr(v, MarketplaceXmlValue.Attr.UPDATED),
+                XmlUtils.attr(p, MarketplaceXmlValue.Attr.UPDATED));
       }
-    } else {
-      ps.version = versionAttr;
-      ps.lastUpdate = attr(p, "updated");
     }
-    return ps;
+
+    return MarketplaceStatsRecord.builder()
+        .name(name)
+        .downloads(downloads)
+        .rating(rating)
+        .ratingCount(ratingCount)
+        .link(link)
+        .iconUrl(iconUrl)
+        .version(version)
+        .lastUpdate(lastUpdate)
+        .build();
   }
 }

@@ -5,8 +5,9 @@ import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.nio.file.Files;
-import org.blacksoil.remotesync.backend.dto.CommunityStats;
-import org.blacksoil.remotesync.backend.dto.MarketplaceStats;
+
+import org.blacksoil.remotesync.backend.dto.CommunityStatsRecord;
+import org.blacksoil.remotesync.backend.dto.MarketplaceStatsRecord;
 import org.blacksoil.remotesync.backend.properties.CommunityProperties;
 import org.blacksoil.remotesync.backend.store.BaselineStore;
 import org.junit.jupiter.api.*;
@@ -19,35 +20,36 @@ class CommunityServiceTest {
 
   @BeforeEach
   void setUp() throws Exception {
-    // temp baseline file
     File tmpDir = Files.createTempDirectory("baseline-test").toFile();
     CommunityProperties props = new CommunityProperties();
     props.setBaselineFile(new File(tmpDir, "baseline.json").getAbsolutePath());
     props.setSponsorsCount(3);
 
     BaselineStore baselineStore =
-        new BaselineStore(props, new com.fasterxml.jackson.databind.ObjectMapper());
+            new BaselineStore(props, new com.fasterxml.jackson.databind.ObjectMapper());
     marketplace = mock(MarketplaceService.class);
     service = new CommunityService(marketplace, props, baselineStore);
   }
 
   @Test
   void monthlyDownloads_increaseAfterSecondCall() {
-    var first = new MarketplaceStats();
-    first.downloads = "1000";
+    var first = MarketplaceStatsRecord.builder()
+            .downloads("1000")
+            .build();
     when(marketplace.getStats("org.blacksoil.remotesync")).thenReturn(Mono.just(first));
 
-    CommunityStats c1 = service.summary("org.blacksoil.remotesync").block();
+    CommunityStatsRecord c1 = service.summary("org.blacksoil.remotesync").block();
     assertNotNull(c1);
-    assertEquals(0L, c1.downloadsMonth); // baseline = 1000
+    assertEquals(0L, c1.downloadsMonth()); // baseline = 1000
 
-    var second = new MarketplaceStats();
-    second.downloads = "1300";
+    var second = MarketplaceStatsRecord.builder()
+            .downloads("1300")
+            .build();
     when(marketplace.getStats("org.blacksoil.remotesync")).thenReturn(Mono.just(second));
 
-    CommunityStats c2 = service.summary("org.blacksoil.remotesync").block();
+    CommunityStatsRecord c2 = service.summary("org.blacksoil.remotesync").block();
     assertNotNull(c2);
-    assertEquals(300L, c2.downloadsMonth); // 1300 - 1000
-    assertEquals(3, c2.sponsorsCount);
+    assertEquals(300L, c2.downloadsMonth()); // 1300 - 1000
+    assertEquals(3, c2.sponsorsCount());
   }
 }

@@ -57,6 +57,6 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.register("publishRelease") {
+tasks.register("publishRelease", fun Task.() {
     dependsOn("buildPlugin", "signPlugin", "publishPlugin")
-}
+})
