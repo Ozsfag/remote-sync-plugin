@@ -1,0 +1,18 @@
+server:
+  port: 9090
+  shutdown: graceful
+
+marketplace:
+  base-url: "https://plugins.jetbrains.com"
+  request-timeout: 5s
+  cache-ttl: 15m
+  user-agent: "RemoteSync/1.0 (+JetBrains Plugin Stats)"
+  prefer-xml-id-link: true
+
+community:
+  sponsors-count: 0
+  baseline-file: "data/community-baseline.json"
+
+spring:
+  main:
+    web-application-type: reactive

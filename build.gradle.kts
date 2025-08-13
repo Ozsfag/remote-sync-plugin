@@ -1,10 +1,10 @@
 plugins {
-    id("java")
-    id("org.jetbrains.intellij.platform") version "2.7.0"
+    alias(libs.plugins.java)
+    alias(libs.plugins.intellij.platform)
 }
 
 group = "org.blacksoil.remotesync"
-version = "1.1.3"
+version = "1.1.4"
 
 repositories {
     mavenCentral()
@@ -13,16 +13,22 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdeaCommunity("2025.1.4")
+        intellijIdeaCommunity(libs.versions.intellij.idea.get())
     }
-    implementation("com.jcraft:jsch:0.1.55")
+
+    implementation(libs.jsch)
+
+    // Lombok (если нужен в коде плагина)
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+
+    // тесты (если нужны) — JUnit:
+    testImplementation(platform("org.junit:junit-bom:5.10.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
-// Java 21
 java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
+    toolchain { languageVersion.set(JavaLanguageVersion.of(21)) }
 }
 
 intellijPlatform {
@@ -34,19 +40,9 @@ intellijPlatform {
             email.set("emeliangaiday@gmail.com")
         }
     }
-
-    // Маркетплейс сам подпишет и опубликует по токену
     publishing {
         token.set(providers.environmentVariable("JB_PUBLISH_TOKEN"))
-        // channels.set(listOf("default"))
     }
-
-    // Если когда‑нибудь решишь подписывать локально:
-    // signing {
-    //     certificateChain.set(layout.projectDirectory.file("certs/chain.crt").asFile.readText())
-    //     privateKey.set(layout.projectDirectory.file("certs/private_key.pem").asFile.readText())
-    //     password.set(providers.environmentVariable("PRIVATE_KEY_PASSWORD"))
-    // }
 }
 
 tasks.processResources {
@@ -54,12 +50,13 @@ tasks.processResources {
 }
 
 sourceSets {
-    main {
-        resources.srcDirs("src/main/resources")
-    }
+    main { resources.srcDirs("src/main/resources") }
 }
 
-// Удобный агрегирующий таск для CI/локально
-tasks.register("publishRelease") {
-    dependsOn("buildPlugin", "signPlugin", "publishPlugin")
+tasks.test {
+    useJUnitPlatform()
 }
+
+tasks.register("publishRelease", fun Task.() {
+    dependsOn("buildPlugin", "signPlugin", "publishPlugin")
+})

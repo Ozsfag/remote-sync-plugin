@@ -2,80 +2,74 @@
 
 > **Sync your Git changes to a remote server over SSH – automatically.**
 
-Remote Sync — это плагин для IntelliJ IDEA, который отслеживает изменения в локальной Git-репозитории и синхронизирует
-их с удалённым сервером по SSH.
+Remote Sync is a plugin for IntelliJ IDEA that monitors changes in your local Git repository and synchronizes them with
+a remote server over SSH.
 
 ---
 
-## 🚀 Возможности
+## 🚀 Features
 
-- 📤 Автоматическая отправка новых и изменённых файлов
-- 🗑️ Удаление удалённых файлов с сервера
-- 🛠️ Настройка SSH (пользователь, ключ или пароль, хост и путь)
-- 🌿 Поддержка любых Git-веток
-- 💡 Интуитивный UI прямо в IntelliJ
+- 📤 Automatically upload new and modified files
+- 🗑️ Remove deleted files from the server
+- 🛠️ SSH configuration (user, key or password, host, and path)
+- 🌿 Support for any Git branches
+- 💡 Intuitive UI right inside IntelliJ
 
 ---
 
-## 🖼️ Интерфейс
+## 🖼️ Interface
 
-### 🌙 Тёмная тема
+### 🌙 Dark Theme
 
 ![Remote Sync – Dark Theme](docs/images/remote-sync-dark.png)
 
-### ☀️ Светлая тема
+### ☀️ Light Theme
 
 ![Remote Sync – Light Theme](docs/images/remote-sync-light.png)
 
-Плагин располагается в нижней панели инструментов. Просто укажи настройки и нажми **Save & Sync** — всё остальное
-произойдёт автоматически.
+The plugin is located in the bottom tool window panel. Just set up the configuration and click **Save & Sync** —
+everything else will happen automatically.
 
 ---
 
-## ⚙️ Установка
+## 🚀 Getting Started
 
-1. Перейди в **Settings → Plugins**
-2. Открой вкладку **Marketplace** и найди **Remote Sync**
-3. Нажми **Install** и перезапусти IDE
+1. Go to **Settings → Plugins** in IntelliJ IDEA.
+2. Open the **Marketplace** tab and search for **Remote Sync**.
+3. Click **Install** and restart your IDE.
 
-Или установи вручную:
+Or install manually:
 
-- Скачай `.zip` с [JetBrains Marketplace](https://plugins.jetbrains.com/)
-- Перейди в **Settings → Plugins → ⚙ → Install Plugin from Disk**
+- Download the `.zip` file from [JetBrains Marketplace](https://plugins.jetbrains.com/).
+- Go to **Settings → Plugins → ⚙ → Install Plugin from Disk**.
 
----
+Once installed:
 
-## 🔧 Настройка
-
-После установки:
-
-1. Открой вкладку **Remote Sync** в нижней панели IDE
-2. Заполни поля:
-    - `Username` — имя пользователя SSH
-    - `IP` — IP-адрес сервера
-    - `Password` или `Private Key Path`
-    - `Git Remote Path` — например, `git@github.com:user/project.git`
-    - `Git Branch` — ветка, которую нужно отслеживать
-3. Нажми **Save & Sync** — плагин выполнит сравнение и синхронизацию
+1. Open the **Remote Sync** tab in the bottom panel of the IDE.
+2. Fill in the fields:
+    - `Username` — SSH username
+    - `IP` — server IP address
+    - `Password` or `Private Key Path`
+    - `Git Remote Path` — for example, `git@github.com:user/project.git`
+    - `Git Branch` — the branch to monitor
+3. Click **Save & Sync** — the plugin will compare and synchronize files automatically.
 
 ---
 
-## 📂 Исходный код
+## 📂 Source Code
 
-Исходники доступны на GitHub:  
+The source code is available on GitHub:  
 🔗 [https://github.com/Ozsfag/remote-sync-plugin](https://github.com/Ozsfag/remote-sync-plugin)
 
 ---
 
-## 📜 Лицензия
+## 📜 License
 
-Лицензия: [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
-
----
-
-## ✉️ Обратная связь
-
-Сообщения об ошибках и предложения:
-[Открыть issue на GitHub](https://github.com/Ozsfag/remote-sync-plugin/issues)
+License: [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 ---
+
+## ✉️ Feedback
+
+Bug reports and feature requests:  
+[Open an issue on GitHub](https://github.com/Ozsfag/remote-sync-plugin/issues)

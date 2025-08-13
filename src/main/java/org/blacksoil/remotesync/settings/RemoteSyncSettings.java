@@ -30,22 +30,8 @@ public class RemoteSyncSettings implements PersistentStateComponent<RemoteSyncSe
 
   public static class State {
     public String username = "";
-    public String host = "";
-    public String privateKeyPath = "";
+    public String ip = "";
     public String remotePath = "";
     public String branch = "";
-  }
-
-  public void applyFromUI(
-      JTextField usernameField,
-      JTextField hostField,
-      JTextField keyPathField,
-      JTextField remotePathField,
-      JTextField branchField) {
-    state.username = usernameField.getText().trim();
-    state.host = hostField.getText().trim();
-    state.privateKeyPath = keyPathField.getText().trim();
-    state.remotePath = remotePathField.getText().trim();
-    state.branch = branchField.getText().trim();
   }
 }
