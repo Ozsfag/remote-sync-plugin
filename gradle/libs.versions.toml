@@ -1,32 +1,18 @@
 [versions]
-spring-boot = "3.5.3"
-spring-dependency-management = "1.1.7"
-jetbrains-intellij-platform = "2.7.1"
+jetbrains-intellij-platform = "2.7.2"
 intellij-idea = "2025.2"
 
-jackson = "2.17.2"
 lombok = "1.18.32"
 jsch = "0.1.55"
-caffeine = "3.2.2"
 
 [libraries]
-# Java deps
 jsch = { module = "com.jcraft:jsch", version.ref = "jsch" }
 
-# Spring starters (для модуля :backend)
-spring-boot-starter-webflux = { module = "org.springframework.boot:spring-boot-starter-webflux", version.ref = "spring-boot" }
-spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
-spring-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor", version.ref = "spring-boot" }
-caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
 
 
 
-# Jackson/Lombok
-jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 
 [plugins]
 java = { id = "java" }
-spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
-spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
 intellij-platform = { id = "org.jetbrains.intellij.platform", version.ref = "jetbrains-intellij-platform" }

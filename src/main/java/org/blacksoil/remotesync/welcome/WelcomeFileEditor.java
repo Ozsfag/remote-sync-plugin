@@ -7,65 +7,72 @@ import com.intellij.openapi.fileEditor.FileEditorState;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.UserDataHolderBase;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import javax.swing.*;
 import java.awt.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import javax.swing.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class WelcomeFileEditor extends UserDataHolderBase implements FileEditor {
   private static final String PLUGIN_ID = "org.blacksoil.remotesync";
 
   private final JPanel panel;
   private final JComponent focus;
+  private final VirtualFile file;
   private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
   private JBCefBrowser browser;
 
-  public WelcomeFileEditor(@SuppressWarnings("unused") Project project) {
-    panel = new JPanel(new BorderLayout());
+  public WelcomeFileEditor(@NotNull Project project, @NotNull VirtualFile file) {
+    this.file = file;
+    this.panel = new JPanel(new BorderLayout());
     String version = pluginVersion();
 
-    String html = loadHtmlWithFallback(version);
-    if (html == null) html = "<html><body><h2>Failed to load welcome page</h2></body></html>";
+    URL welcomeUrl = getRes("/welcome/welcome.html");
+    URL fallbackUrl = getRes("/welcome/fallback.html");
 
     if (JBCefApp.isSupported()) {
       browser = new JBCefBrowser();
-      Disposer.register(this, browser);
-      browser.loadHTML(html, "http://localhost/");
+      Disposer.register(this, browser); // Важно!
+      URL urlToLoad = welcomeUrl != null ? welcomeUrl : fallbackUrl;
+      if (urlToLoad != null) {
+        browser.loadURL(appendVersion(urlToLoad, version));
+      }
       focus = browser.getComponent();
     } else {
       // Swing fallback
       JEditorPane pane = new JEditorPane();
       pane.setEditable(false);
       pane.setContentType("text/html");
-      pane.setText(html);
+
+      String html = readOrNull(welcomeUrl);
+      if (html == null) html = readOrNull(fallbackUrl);
+      if (html != null) {
+        html = html.replace("${version}", version);
+        pane.setText(html);
+      }
+
       focus = new JBScrollPane(pane);
     }
 
     panel.add(focus, BorderLayout.CENTER);
   }
 
-  private static @Nullable String loadHtmlWithFallback(String version) {
-    URL welcomeUrl = getRes("/welcome/welcome.html");
-    URL fallbackUrl = getRes("/welcome/fallback.html");
-
-    String html = readOrNull(welcomeUrl);
-    if (html == null) html = readOrNull(fallbackUrl);
-    if (html != null) {
-      html = html.replace("${version}", version);
-    }
-    return html;
-  }
-
   private static @Nullable URL getRes(String path) {
     return WelcomeFileEditor.class.getResource(path);
+  }
+
+  private static String appendVersion(URL url, String version) {
+    String base = url.toExternalForm();
+    return base + (base.contains("?") ? "&" : "?") + "v=" + version;
   }
 
   private static String readOrNull(@Nullable URL url) {
@@ -78,8 +85,8 @@ public final class WelcomeFileEditor extends UserDataHolderBase implements FileE
   }
 
   private static String pluginVersion() {
-    var descriptor = PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID));
-    return descriptor != null ? descriptor.getVersion() : "0.0.0";
+    var d = PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID));
+    return d != null ? d.getVersion() : "0.0.0";
   }
 
   @Override
@@ -126,5 +133,10 @@ public final class WelcomeFileEditor extends UserDataHolderBase implements FileE
       browser.dispose();
       browser = null;
     }
+  }
+
+  @Override
+  public @NotNull VirtualFile getFile() {
+    return file;
   }
 }
