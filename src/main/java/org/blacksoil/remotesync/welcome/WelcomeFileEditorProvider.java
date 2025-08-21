@@ -3,11 +3,12 @@ package org.blacksoil.remotesync.welcome;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorPolicy;
 import com.intellij.openapi.fileEditor.FileEditorProvider;
+import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 
-public final class WelcomeFileEditorProvider implements FileEditorProvider {
+public final class WelcomeFileEditorProvider implements FileEditorProvider, DumbAware {
   public static final String EDITOR_TYPE_ID = "remote-sync-welcome";
 
   @Override
