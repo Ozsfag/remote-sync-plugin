@@ -5,6 +5,7 @@ import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorState;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.jcef.JBCefApp;
@@ -31,42 +32,40 @@ public final class WelcomeFileEditor extends UserDataHolderBase implements FileE
     panel = new JPanel(new BorderLayout());
     String version = pluginVersion();
 
-    URL welcomeUrl = getRes("/docs/welcome.html");
-    URL fallbackUrl = getRes("/welcome/fallback.html");
+    String html = loadHtmlWithFallback(version);
+    if (html == null) html = "<html><body><h2>Failed to load welcome page</h2></body></html>";
 
     if (JBCefApp.isSupported()) {
       browser = new JBCefBrowser();
-      URL urlToLoad = welcomeUrl != null ? welcomeUrl : fallbackUrl;
-      if (urlToLoad != null) {
-        browser.loadURL(appendVersion(urlToLoad, version));
-      }
+      Disposer.register(this, browser);
+      browser.loadHTML(html, "http://localhost/");
       focus = browser.getComponent();
     } else {
       // Swing fallback
       JEditorPane pane = new JEditorPane();
       pane.setEditable(false);
       pane.setContentType("text/html");
-
-      String html = readOrNull(welcomeUrl);
-      if (html == null) html = readOrNull(fallbackUrl);
-      if (html != null) {
-        html = html.replace("${version}", version);
-        pane.setText(html);
-      }
-
+      pane.setText(html);
       focus = new JBScrollPane(pane);
     }
 
     panel.add(focus, BorderLayout.CENTER);
   }
 
-  private static @Nullable URL getRes(String path) {
-    return WelcomeFileEditor.class.getResource(path);
+  private static @Nullable String loadHtmlWithFallback(String version) {
+    URL welcomeUrl = getRes("/welcome/welcome.html");
+    URL fallbackUrl = getRes("/welcome/fallback.html");
+
+    String html = readOrNull(welcomeUrl);
+    if (html == null) html = readOrNull(fallbackUrl);
+    if (html != null) {
+      html = html.replace("${version}", version);
+    }
+    return html;
   }
 
-  private static String appendVersion(URL url, String version) {
-    String base = url.toExternalForm();
-    return base + (base.contains("?") ? "&" : "?") + "v=" + version;
+  private static @Nullable URL getRes(String path) {
+    return WelcomeFileEditor.class.getResource(path);
   }
 
   private static String readOrNull(@Nullable URL url) {
@@ -79,8 +78,8 @@ public final class WelcomeFileEditor extends UserDataHolderBase implements FileE
   }
 
   private static String pluginVersion() {
-    var d = PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID));
-    return d != null ? d.getVersion() : "0.0.0";
+    var descriptor = PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID));
+    return descriptor != null ? descriptor.getVersion() : "0.0.0";
   }
 
   @Override
