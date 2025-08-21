@@ -21,62 +21,35 @@
 
         <div class="action-block">
             <div class="button-row">
-                <!-- Getting Started → якорь в README с инструкцией -->
-                <a class="btn primary"
-                   href="https://github.com/Ozsfag/remote-sync-plugin#getting-started"
-                   rel="noopener"
-                >🚀 <span class="btn-text">Getting Started</span></a>
-
-                <!-- Донаты → Boosty -->
-                <a class="btn sponsor"
-                   href="https://boosty.to/ozsfag/donate"
-                   rel="noopener"
-                >❤ <span class="btn-text">Become a Sponsor</span></a>
-
-                <!-- Документация → основной README -->
-                <a class="btn secondary"
-                   href="https://github.com/Ozsfag/remote-sync-plugin/blob/main/README.md"
-                   rel="noopener"
-                >📄 <span class="btn-text">Docs</span></a>
-
-                <!-- Репорт багов → Issues -->
-                <a class="btn ghost"
-                   href="https://github.com/Ozsfag/remote-sync-plugin/issues"
-                   rel="noopener"
-                >🐞 <span class="btn-text">Report issue</span></a>
+                <a class="btn primary" href="https://github.com/Ozsfag/remote-sync-plugin#getting-started"
+                   rel="noopener">
+                    🚀 <span class="btn-text">Getting Started</span>
+                </a>
+                <a class="btn sponsor" href="https://boosty.to/ozsfag/donate" rel="noopener">
+                    ❤ <span class="btn-text">Become a Sponsor</span>
+                </a>
+                <a class="btn secondary" href="https://github.com/Ozsfag/remote-sync-plugin/blob/main/README.md"
+                   rel="noopener">
+                    📄 <span class="btn-text">Docs</span>
+                </a>
+                <a class="btn ghost" href="https://github.com/Ozsfag/remote-sync-plugin/issues" rel="noopener">
+                    🐞 <span class="btn-text">Report issue</span>
+                </a>
             </div>
 
             <div class="stats">
-                <div class="stat"><b id="downloads-month">–</b>
-                    <div class="muted">downloads this month</div>
-                </div>
-                <div class="stat"><b id="sponsors-count">–</b>
-                    <div class="muted">developers sponsored</div>
-                </div>
-            </div>
-
-            <!-- Добавлено: live stats из backend -->
-            <div class="stats"
-                 data-endpoint="http://localhost:9090/api/marketplace/stats"
-                 data-plugin-id="org.blacksoil.remotesync">
-                <div class="stat"><b id="mp-downloads-total">–</b>
+                <div class="stat">
+                    <img alt="Downloads" src="https://img.shields.io/jetbrains/plugin/d/28138">
                     <div class="muted">total downloads</div>
                 </div>
-                <div class="stat"><b id="mp-version">–</b>
+                <div class="stat">
+                    <img alt="Version" src="https://img.shields.io/jetbrains/plugin/v/28138">
                     <div class="muted">latest version</div>
                 </div>
-            </div>
-
-            <div class="goal" data-current="62" data-target="100">
-                <div class="bar"><span id="goal-bar"></span></div>
-                <div class="caption"><span>Monthly goal</span><span id="goal-text">62 / 100</span></div>
-                <div class="muted goal-hint">Help us reach the goal to ship WireGuard support faster.</div>
-                <span class="hint">Even $3 helps keep Remote Sync free for everyone.</span>
             </div>
         </div>
     </div>
 </div>
-<script src="./marketplace-stats.js"></script>
 <script src="./base.js"></script>
 </body>
 </html>
