@@ -8,22 +8,23 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 
-public final class WelcomeFileEditorProvider implements FileEditorProvider, DumbAware {
-  public static final String EDITOR_TYPE_ID = "remote-sync-welcome";
+public class WelcomeFileEditorProvider implements FileEditorProvider, DumbAware {
+
+  public static final String WELCOME_EDITOR_ID = "WelcomeEditor";
 
   @Override
   public boolean accept(@NotNull Project project, @NotNull VirtualFile file) {
-    return file instanceof WelcomeVirtualFile;
+    return file.getName().equals("WELCOME.md"); // или любой другой критерий
   }
 
   @Override
   public @NotNull FileEditor createEditor(@NotNull Project project, @NotNull VirtualFile file) {
-    return new WelcomeFileEditor(project);
+    return new WelcomeFileEditor(project, file);
   }
 
   @Override
   public @NotNull String getEditorTypeId() {
-    return EDITOR_TYPE_ID;
+    return WELCOME_EDITOR_ID;
   }
 
   @Override
