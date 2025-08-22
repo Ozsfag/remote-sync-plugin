@@ -6,8 +6,11 @@ lombok = "1.18.32"
 jsch = "0.1.55"
 
 [libraries]
-
 jsch = { module = "com.jcraft:jsch", version.ref = "jsch" }
+
+
+
+
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 
 [plugins]

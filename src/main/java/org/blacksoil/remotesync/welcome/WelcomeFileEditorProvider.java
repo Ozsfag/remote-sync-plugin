@@ -10,21 +10,21 @@ import org.jetbrains.annotations.NotNull;
 
 public class WelcomeFileEditorProvider implements FileEditorProvider, DumbAware {
 
-  public static final String WELCOME_EDITOR_ID = "WelcomeEditor";
+  public static final String EDITOR_TYPE_ID = "remote-sync-welcome";
 
   @Override
   public boolean accept(@NotNull Project project, @NotNull VirtualFile file) {
-    return file.getName().equals("WELCOME.md"); // или любой другой критерий
+    return file instanceof WelcomeVirtualFile;
   }
 
   @Override
   public @NotNull FileEditor createEditor(@NotNull Project project, @NotNull VirtualFile file) {
-    return new WelcomeFileEditor(project, file);
+    return new WelcomeFileEditor(file);
   }
 
   @Override
   public @NotNull String getEditorTypeId() {
-    return WELCOME_EDITOR_ID;
+    return EDITOR_TYPE_ID;
   }
 
   @Override
