@@ -8,7 +8,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 
-public final class WelcomeFileEditorProvider implements FileEditorProvider, DumbAware {
+public class WelcomeFileEditorProvider implements FileEditorProvider, DumbAware {
+
   public static final String EDITOR_TYPE_ID = "remote-sync-welcome";
 
   @Override
@@ -18,7 +19,7 @@ public final class WelcomeFileEditorProvider implements FileEditorProvider, Dumb
 
   @Override
   public @NotNull FileEditor createEditor(@NotNull Project project, @NotNull VirtualFile file) {
-    return new WelcomeFileEditor(project);
+    return new WelcomeFileEditor(file);
   }
 
   @Override
