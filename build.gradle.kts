@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.blacksoil.remotesync"
-version = "1.1.27"
+version = "1.1.4"
 
 repositories {
     mavenCentral()
