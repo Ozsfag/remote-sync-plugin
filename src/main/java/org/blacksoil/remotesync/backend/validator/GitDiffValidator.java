@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.validator;
+package org.blacksoil.remotesync.backend.validator;
 
 public class GitDiffValidator {
 

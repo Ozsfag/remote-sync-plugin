@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync;
+package org.blacksoil.remotesync.backend.diff;
 
 import com.intellij.openapi.diagnostic.Logger;
 import java.io.BufferedReader;
@@ -8,7 +8,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.blacksoil.remotesync.validator.GitDiffValidator;
+import org.blacksoil.remotesync.backend.validator.GitDiffValidator;
 
 public class GitDiffDetector {
   private static final Logger LOG = Logger.getInstance(GitDiffDetector.class);

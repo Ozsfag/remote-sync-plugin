@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.welcome;
+package org.blacksoil.remotesync.page.welcome;
 
 import com.intellij.ide.highlighter.HtmlFileType;
 import com.intellij.testFramework.LightVirtualFile;

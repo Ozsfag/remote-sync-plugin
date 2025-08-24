@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.welcome;
+package org.blacksoil.remotesync.page.welcome;
 
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.ide.plugins.PluginManagerCore;
