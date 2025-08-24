@@ -56,6 +56,10 @@ public final class RemoteSyncView {
 
   // --- API ---
 
+  private static String n(String v) {
+    return v == null ? "" : v;
+  }
+
   public void setData(@NotNull FormData d) {
     usernameField.setText(n(d.username()));
     ipField.setText(n(d.ip()));
@@ -98,11 +102,11 @@ public final class RemoteSyncView {
     this.onTest = Objects.requireNonNull(r);
   }
 
+  // --- wiring ---
+
   public void onChange(Runnable r) {
     this.onChange = Objects.requireNonNull(r);
   }
-
-  // --- wiring ---
 
   private void wireButtons() {
     syncButton.addActionListener(e -> onSync.run());
@@ -141,9 +145,5 @@ public final class RemoteSyncView {
     public void changedUpdate(DocumentEvent e) {
       r.run();
     }
-  }
-
-  private static String n(String v) {
-    return v == null ? "" : v;
   }
 }

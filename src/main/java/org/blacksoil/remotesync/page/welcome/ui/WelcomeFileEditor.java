@@ -1,4 +1,6 @@
-package org.blacksoil.remotesync.page.welcome;
+package org.blacksoil.remotesync.page.welcome.ui;
+
+import static org.blacksoil.remotesync.page.welcome.WelcomeConstants.*;
 
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorState;
@@ -9,12 +11,13 @@ import java.awt.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import javax.swing.*;
-import org.blacksoil.remotesync.page.welcome.browserAdapter.BrowserAdapter;
-import org.blacksoil.remotesync.page.welcome.htmlLoader.*;
-import org.blacksoil.remotesync.page.welcome.provider.browser.BrowserProvider;
-import org.blacksoil.remotesync.page.welcome.provider.browser.DefaultBrowserProvider;
-import org.blacksoil.remotesync.page.welcome.provider.version.IntellijPluginVersionProvider;
-import org.blacksoil.remotesync.page.welcome.provider.version.PluginVersionProvider;
+import org.blacksoil.remotesync.page.welcome.api.Browser;
+import org.blacksoil.remotesync.page.welcome.api.BrowserProvider;
+import org.blacksoil.remotesync.page.welcome.api.HtmlLoader;
+import org.blacksoil.remotesync.page.welcome.api.PluginVersionProvider;
+import org.blacksoil.remotesync.page.welcome.impl.browser.DefaultBrowserProvider;
+import org.blacksoil.remotesync.page.welcome.impl.resource.ClasspathHtmlLoader;
+import org.blacksoil.remotesync.page.welcome.impl.version.IntellijPluginVersionProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,7 +27,7 @@ public final class WelcomeFileEditor extends UserDataHolderBase implements FileE
   private final VirtualFile file;
   private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
-  // Прод-конструктор (обратная совместимость)
+  // Прод-конструктор
   public WelcomeFileEditor(@NotNull VirtualFile file) {
     this(
         file,
@@ -41,35 +44,26 @@ public final class WelcomeFileEditor extends UserDataHolderBase implements FileE
       @NotNull PluginVersionProvider versionProvider) {
     this.file = file;
     this.panel = new JPanel(new BorderLayout());
+
     String version = versionProvider.getVersionOrDefault();
+    String primary = htmlLoader.loadOrNull(PRIMARY_HTML_PATH);
+    String fallback = htmlLoader.loadOrNull(FALLBACK_HTML_PATH);
+    String html = applyVersion(pickHtmlOrDefault(primary, fallback), version);
 
-    String html =
-        firstNotNull(
-            htmlLoader.loadOrNull("welcome/welcome.html"),
-            htmlLoader.loadOrNull("welcome/fallback.html"));
-    if (html != null) {
-      html = html.replace("${version}", version);
-    }
-
+    Browser browserOrNull;
     if (browserProvider.isSupported()) {
-      // nullable в режиме fallback
-      BrowserAdapter browserAdapter = browserProvider.create();
-      if (html != null) browserAdapter.loadHtml(html);
-      focus = browserAdapter.getComponent();
+      Browser b = browserProvider.create();
+      b.loadHtml(html);
+      this.focus = b.getComponent();
     } else {
-      // Swing fallback
       JEditorPane pane = new JEditorPane();
       pane.setEditable(false);
       pane.setContentType("text/html");
-      if (html != null) pane.setText(html);
-      focus = new JBScrollPane(pane);
+      pane.setText(html);
+      this.focus = new JBScrollPane(pane);
     }
 
-    panel.add(focus, BorderLayout.CENTER);
-  }
-
-  private static String firstNotNull(String a, String b) {
-    return a != null ? a : b;
+    this.panel.add(focus, BorderLayout.CENTER);
   }
 
   @Override
@@ -112,7 +106,7 @@ public final class WelcomeFileEditor extends UserDataHolderBase implements FileE
 
   @Override
   public void dispose() {
-    /* браузер диспоузится GC-ом; JCEF управляется IDE */
+    /* если нужно диспозить JCEF – делай это внутри BrowserProvider */
   }
 
   @Override

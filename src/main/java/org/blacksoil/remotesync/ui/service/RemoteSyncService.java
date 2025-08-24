@@ -12,14 +12,6 @@ import org.blacksoil.remotesync.ui.settings.RemoteSyncSettings;
 
 @UtilityClass
 public class RemoteSyncService {
-  public interface SyncCallback {
-    void onStatus(String message);
-
-    void onError(String error);
-
-    void onComplete();
-  }
-
   private final Logger LOG = Logger.getInstance(RemoteSyncService.class);
 
   public void sync(Project project, RemoteSyncSettings.State state, SyncCallback callback) {
@@ -73,5 +65,13 @@ public class RemoteSyncService {
     } catch (Exception e) {
       cb.onError(e.getMessage());
     }
+  }
+
+  public interface SyncCallback {
+    void onStatus(String message);
+
+    void onError(String error);
+
+    void onComplete();
   }
 }

@@ -1,32 +1,35 @@
 package org.blacksoil.remotesync.page.welcome;
 
+import static org.blacksoil.remotesync.page.welcome.WelcomeConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.intellij.testFramework.LightVirtualFile;
+import org.blacksoil.remotesync.page.welcome.vfs.WelcomeVirtualFile;
 import org.junit.jupiter.api.Test;
 
 class WelcomeVirtualFileTest {
 
   @Test
   void usesProvidedContent_withoutIdeaApplication() {
-    // DI-конструктор: не зависим от classpath ресурсов и IDE Application
+    // DI: передаем готовый HTML, не трогаем classpath и IDE Application
     var vf = new WelcomeVirtualFile("<html>PRIMARY</html>");
 
-    assertEquals(WelcomeVirtualFile.NAME, vf.getName());
+    assertEquals("remoteSync.welcome.shown.1.2.3", WelcomeConstants.buildWelcomeShownKey("1.2.3"));
     assertFalse(vf.isWritable());
     assertInstanceOf(LightVirtualFile.class, vf);
 
-    // НЕ используем VfsUtilCore.loadText(vf) — это триггерит FileSizeLimit/Application
-    CharSequence content = vf.getContent(); // безопасно в unit-тестах
+    // читаем безопасно через getContent(), без VfsUtilCore.loadText(...)
+    CharSequence content = vf.getContent();
     assertNotNull(content);
     assertTrue(content.toString().contains("PRIMARY"));
   }
 
   @Test
   void fallsBackToDefault_whenNullProvided() {
+    // DI: передаем null -> должен использоваться DEFAULT_HTML
     var vf = new WelcomeVirtualFile((String) null);
 
-    assertEquals(WelcomeVirtualFile.NAME, vf.getName());
+    assertEquals("remoteSync.welcome.shown.1.2.3", WelcomeConstants.buildWelcomeShownKey("1.2.3"));
     assertFalse(vf.isWritable());
 
     CharSequence content = vf.getContent();
@@ -40,8 +43,8 @@ class WelcomeVirtualFileTest {
     var vf =
         new WelcomeVirtualFile(
             path -> {
-              if (WelcomeVirtualFile.PRIMARY_PATH.equals(path)) return null;
-              if (WelcomeVirtualFile.FALLBACK_PATH.equals(path)) return "<html>FALLBACK</html>";
+              if (PRIMARY_HTML_PATH.equals(path)) return null;
+              if (FALLBACK_HTML_PATH.equals(path)) return "<html>FALLBACK</html>";
               return null;
             });
 

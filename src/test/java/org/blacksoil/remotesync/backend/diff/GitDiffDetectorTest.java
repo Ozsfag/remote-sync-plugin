@@ -10,28 +10,29 @@ import org.junit.jupiter.api.Test;
 
 class GitDiffDetectorTest {
 
-    @Test
-    void testValidDiffResult() {
-        GitCommandExecutor mockExecutor = mock(GitCommandExecutor.class);
-        when(mockExecutor.runGitCommand(any(), eq("diff"), eq("--name-only"), eq("origin/main")))
-                .thenReturn(List.of("file1.java", "file2.java"));
-        when(mockExecutor.runGitCommand(any(), eq("diff"), eq("--name-only"), eq("--diff-filter=D"), eq("origin/main")))
-                .thenReturn(List.of("deleted1.java"));
+  @Test
+  void testValidDiffResult() {
+    GitCommandExecutor mockExecutor = mock(GitCommandExecutor.class);
+    when(mockExecutor.runGitCommand(any(), eq("diff"), eq("--name-only"), eq("origin/main")))
+        .thenReturn(List.of("file1.java", "file2.java"));
+    when(mockExecutor.runGitCommand(
+            any(), eq("diff"), eq("--name-only"), eq("--diff-filter=D"), eq("origin/main")))
+        .thenReturn(List.of("deleted1.java"));
 
-        DiffResult result = GitDiffDetector.getChangedFiles("/project", "main", mockExecutor);
+    DiffResult result = GitDiffDetector.getChangedFiles("/project", "main", mockExecutor);
 
-        assertEquals(2, result.addedOrModified().size());
-        assertEquals(1, result.deleted().size());
-    }
+    assertEquals(2, result.addedOrModified().size());
+    assertEquals(1, result.deleted().size());
+  }
 
-    @Test
-    void testInvalidInput() {
-        GitCommandExecutor dummyExecutor = mock(GitCommandExecutor.class);
+  @Test
+  void testInvalidInput() {
+    GitCommandExecutor dummyExecutor = mock(GitCommandExecutor.class);
 
-        DiffResult result = GitDiffDetector.getChangedFiles(null, "main", dummyExecutor);
+    DiffResult result = GitDiffDetector.getChangedFiles(null, "main", dummyExecutor);
 
-        assertTrue(result.addedOrModified().isEmpty());
-        assertTrue(result.deleted().isEmpty());
-        verify(dummyExecutor, never()).runGitCommand(any(), any());
-    }
+    assertTrue(result.addedOrModified().isEmpty());
+    assertTrue(result.deleted().isEmpty());
+    verify(dummyExecutor, never()).runGitCommand(any(), any());
+  }
 }

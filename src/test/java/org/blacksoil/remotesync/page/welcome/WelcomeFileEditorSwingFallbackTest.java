@@ -6,9 +6,10 @@ import static org.mockito.Mockito.*;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.JBScrollPane;
 import javax.swing.*;
-import org.blacksoil.remotesync.page.welcome.htmlLoader.HtmlLoader;
-import org.blacksoil.remotesync.page.welcome.provider.browser.BrowserProvider;
-import org.blacksoil.remotesync.page.welcome.provider.version.PluginVersionProvider;
+import org.blacksoil.remotesync.page.welcome.api.BrowserProvider;
+import org.blacksoil.remotesync.page.welcome.api.HtmlLoader;
+import org.blacksoil.remotesync.page.welcome.api.PluginVersionProvider;
+import org.blacksoil.remotesync.page.welcome.ui.WelcomeFileEditor;
 import org.junit.jupiter.api.Test;
 
 class WelcomeFileEditorSwingFallbackTest {

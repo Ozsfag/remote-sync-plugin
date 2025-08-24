@@ -1,12 +1,14 @@
 package org.blacksoil.remotesync.page.welcome;
 
+import static org.blacksoil.remotesync.page.welcome.WelcomeConstants.buildWelcomeShownKey;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.intellij.openapi.project.Project;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import org.blacksoil.remotesync.page.welcome.service.WelcomeFacadeServices;
+import org.blacksoil.remotesync.page.welcome.api.WelcomeFacade;
+import org.blacksoil.remotesync.page.welcome.listener.WelcomeProjectListener;
 import org.junit.jupiter.api.Test;
 
 class WelcomeProjectListenerTest {
@@ -20,8 +22,8 @@ class WelcomeProjectListenerTest {
     AtomicReference<String> savedKey = new AtomicReference<>();
     AtomicReference<Boolean> savedVal = new AtomicReference<>();
 
-    WelcomeFacadeServices fake =
-        new WelcomeFacadeServices() {
+    WelcomeFacade fake =
+        new WelcomeFacade() {
           boolean shown = false;
 
           @Override
@@ -68,8 +70,8 @@ class WelcomeProjectListenerTest {
     AtomicBoolean flagTouched = new AtomicBoolean(false);
     AtomicBoolean ranSmart = new AtomicBoolean(false);
 
-    WelcomeFacadeServices fake =
-        new WelcomeFacadeServices() {
+    WelcomeFacade fake =
+        new WelcomeFacade() {
           @Override
           public String getPluginVersionOrNull() {
             return "7.7.7";
@@ -106,11 +108,10 @@ class WelcomeProjectListenerTest {
   @Test
   void doesNothingWhenPluginNotFound() {
     Project project = mock(Project.class);
-
     AtomicBoolean anythingCalled = new AtomicBoolean(false);
 
-    WelcomeFacadeServices fake =
-        new WelcomeFacadeServices() {
+    WelcomeFacade fake =
+        new WelcomeFacade() {
           @Override
           public String getPluginVersionOrNull() {
             return null;
@@ -151,8 +152,8 @@ class WelcomeProjectListenerTest {
     AtomicBoolean opened = new AtomicBoolean(false);
     AtomicBoolean flagTouched = new AtomicBoolean(false);
 
-    WelcomeFacadeServices fake =
-        new WelcomeFacadeServices() {
+    WelcomeFacade fake =
+        new WelcomeFacade() {
           @Override
           public String getPluginVersionOrNull() {
             return "2.0.0";
@@ -187,6 +188,6 @@ class WelcomeProjectListenerTest {
 
   @Test
   void buildKeyFormatsCorrectly() {
-    assertEquals("remoteSync.welcome.shown.3.4.5", WelcomeProjectListener.buildKey("3.4.5"));
+    assertEquals("remoteSync.welcome.shown.3.4.5", buildWelcomeShownKey("3.4.5"));
   }
 }

@@ -1,25 +1,22 @@
-package org.blacksoil.remotesync.page.welcome;
+package org.blacksoil.remotesync.page.welcome.listener;
+
+import static org.blacksoil.remotesync.page.welcome.WelcomeConstants.*;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManagerListener;
-import org.blacksoil.remotesync.page.welcome.service.DefaultWelcomeFacadeServices;
-import org.blacksoil.remotesync.page.welcome.service.WelcomeFacadeServices;
+import org.blacksoil.remotesync.page.welcome.api.WelcomeFacade;
+import org.blacksoil.remotesync.page.welcome.impl.facade.DefaultWelcomeFacade;
 import org.jetbrains.annotations.NotNull;
 
-public record WelcomeProjectListener(WelcomeFacadeServices services)
-    implements ProjectManagerListener {
+public record WelcomeProjectListener(WelcomeFacade services) implements ProjectManagerListener {
 
   /** Прод-конструктор (используется IDE). */
   public WelcomeProjectListener() {
-    this(new DefaultWelcomeFacadeServices());
+    this(new DefaultWelcomeFacade());
   }
 
   /** Тестируемый конструктор. */
   public WelcomeProjectListener {}
-
-  static String buildKey(String version) {
-    return "remoteSync.welcome.shown." + version;
-  }
 
   @Override
   @SuppressWarnings("removal")
@@ -27,7 +24,7 @@ public record WelcomeProjectListener(WelcomeFacadeServices services)
     String version = services.getPluginVersionOrNull();
     if (version == null) return;
 
-    String key = buildKey(version);
+    String key = buildWelcomeShownKey(version);
     if (services.isShown(project, key)) return;
 
     services.runWhenSmart(

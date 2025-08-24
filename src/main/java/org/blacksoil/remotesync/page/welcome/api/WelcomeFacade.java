@@ -1,8 +1,8 @@
-package org.blacksoil.remotesync.page.welcome.service;
+package org.blacksoil.remotesync.page.welcome.api;
 
 import com.intellij.openapi.project.Project;
 
-public interface WelcomeFacadeServices {
+public interface WelcomeFacade {
   String getPluginVersionOrNull();
 
   boolean isShown(Project project, String key);

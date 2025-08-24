@@ -26,7 +26,8 @@
     <!-- Расширения -->
     <extensions defaultExtensionNs="com.intellij">
 
-        <fileEditorProvider implementation="org.blacksoil.remotesync.page.welcome.provider.WelcomeFileEditorProvider"/>
+        <fileEditorProvider
+                implementation="org.blacksoil.remotesync.page.welcome.ui.provider.WelcomeFileEditorProvider"/>
 
         <!-- Tool Window -->
         <toolWindow
@@ -44,7 +45,7 @@
 
     <projectListeners>
         <listener
-                class="org.blacksoil.remotesync.page.welcome.WelcomeProjectListener"
+                class="org.blacksoil.remotesync.page.welcome.listener.WelcomeProjectListener"
                 topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </projectListeners>
 </idea-plugin>

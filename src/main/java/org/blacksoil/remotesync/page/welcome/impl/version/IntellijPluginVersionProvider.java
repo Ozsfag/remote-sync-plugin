@@ -1,10 +1,12 @@
-package org.blacksoil.remotesync.page.welcome.provider.version;
+package org.blacksoil.remotesync.page.welcome.impl.version;
+
+import static org.blacksoil.remotesync.page.welcome.WelcomeConstants.*;
 
 import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.extensions.PluginId;
+import org.blacksoil.remotesync.page.welcome.api.PluginVersionProvider;
 
 public class IntellijPluginVersionProvider implements PluginVersionProvider {
-  private static final String PLUGIN_ID = "org.blacksoil.remotesync";
 
   @Override
   public String getVersionOrDefault() {

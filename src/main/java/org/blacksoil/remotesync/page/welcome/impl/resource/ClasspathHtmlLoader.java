@@ -1,8 +1,9 @@
-package org.blacksoil.remotesync.page.welcome.htmlLoader;
+package org.blacksoil.remotesync.page.welcome.impl.resource;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import org.blacksoil.remotesync.page.welcome.WelcomeFileEditor;
+import org.blacksoil.remotesync.page.welcome.api.HtmlLoader;
+import org.blacksoil.remotesync.page.welcome.ui.WelcomeFileEditor;
 
 public class ClasspathHtmlLoader implements HtmlLoader {
   @Override

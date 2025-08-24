@@ -5,28 +5,14 @@ import static org.mockito.Mockito.*;
 
 import com.intellij.openapi.vfs.VirtualFile;
 import javax.swing.*;
-import org.blacksoil.remotesync.page.welcome.browserAdapter.BrowserAdapter;
-import org.blacksoil.remotesync.page.welcome.htmlLoader.HtmlLoader;
-import org.blacksoil.remotesync.page.welcome.provider.browser.BrowserProvider;
-import org.blacksoil.remotesync.page.welcome.provider.version.PluginVersionProvider;
+import org.blacksoil.remotesync.page.welcome.api.Browser;
+import org.blacksoil.remotesync.page.welcome.api.BrowserProvider;
+import org.blacksoil.remotesync.page.welcome.api.HtmlLoader;
+import org.blacksoil.remotesync.page.welcome.api.PluginVersionProvider;
+import org.blacksoil.remotesync.page.welcome.ui.WelcomeFileEditor;
 import org.junit.jupiter.api.Test;
 
 class WelcomeFileEditorJcefTest {
-
-  static class FakeBrowserAdapter implements BrowserAdapter {
-    String lastHtml;
-    final JComponent comp = new JPanel();
-
-    @Override
-    public JComponent getComponent() {
-      return comp;
-    }
-
-    @Override
-    public void loadHtml(String html) {
-      this.lastHtml = html;
-    }
-  }
 
   @Test
   void createsJcefBrowserAndLoadsHtml() {
@@ -40,7 +26,7 @@ class WelcomeFileEditorJcefTest {
     var version = mock(PluginVersionProvider.class);
     when(version.getVersionOrDefault()).thenReturn("1.2.3");
 
-    var fakeBrowser = new FakeBrowserAdapter();
+    var fakeBrowser = new FakeBrowser();
     var provider = mock(BrowserProvider.class);
     when(provider.isSupported()).thenReturn(true);
     when(provider.create()).thenReturn(fakeBrowser);
@@ -55,5 +41,20 @@ class WelcomeFileEditorJcefTest {
     assertNotNull(editor.getComponent());
     assertTrue(editor.isValid());
     assertFalse(editor.isModified());
+  }
+
+  static class FakeBrowser implements Browser {
+    final JComponent comp = new JPanel();
+    String lastHtml;
+
+    @Override
+    public JComponent getComponent() {
+      return comp;
+    }
+
+    @Override
+    public void loadHtml(String html) {
+      this.lastHtml = html;
+    }
   }
 }

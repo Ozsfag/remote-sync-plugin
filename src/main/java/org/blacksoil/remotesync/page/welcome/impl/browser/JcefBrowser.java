@@ -1,11 +1,12 @@
-package org.blacksoil.remotesync.page.welcome.browserAdapter;
+package org.blacksoil.remotesync.page.welcome.impl.browser;
 
 import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
 import javax.swing.*;
 import lombok.Getter;
+import org.blacksoil.remotesync.page.welcome.api.Browser;
 
-public class JcefBrowserAdapter implements BrowserAdapter {
+public class JcefBrowser implements Browser {
   @Getter private final JBCefBrowser inner = new JBCefBrowser();
 
   public static boolean jcefSupported() {

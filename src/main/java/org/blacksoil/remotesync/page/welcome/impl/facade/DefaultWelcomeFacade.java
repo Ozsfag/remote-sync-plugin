@@ -1,4 +1,6 @@
-package org.blacksoil.remotesync.page.welcome.service;
+package org.blacksoil.remotesync.page.welcome.impl.facade;
+
+import static org.blacksoil.remotesync.page.welcome.WelcomeConstants.*;
 
 import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.ide.util.PropertiesComponent;
@@ -8,15 +10,13 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import java.util.function.Supplier;
-import org.blacksoil.remotesync.page.welcome.WelcomeVirtualFile;
+import org.blacksoil.remotesync.page.welcome.api.WelcomeFacade;
+import org.blacksoil.remotesync.page.welcome.vfs.WelcomeVirtualFile;
 
-public record DefaultWelcomeFacadeServices(Supplier<VirtualFile> fileFactory)
-    implements WelcomeFacadeServices {
-
-  private static final String PLUGIN_ID = "org.blacksoil.remotesync";
+public record DefaultWelcomeFacade(Supplier<VirtualFile> fileFactory) implements WelcomeFacade {
 
   /** Дополнительный конструктор без аргументов — делегирует в канонический. */
-  public DefaultWelcomeFacadeServices() {
+  public DefaultWelcomeFacade() {
     this(WelcomeVirtualFile::new);
   }
 
