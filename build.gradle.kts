@@ -23,8 +23,11 @@ dependencies {
     annotationProcessor(libs.lombok)
 
     // тесты (если нужны) — JUnit:
-    testImplementation(platform("org.junit:junit-bom:5.10.2"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(libs.junit.api)
+    testRuntimeOnly(libs.junit.engine)
+    testImplementation(libs.junit4) // ← для совместимости с IntelliJ
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.junit)
 }
 
 java {

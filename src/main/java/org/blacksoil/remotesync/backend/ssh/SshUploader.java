@@ -1,22 +1,15 @@
 package org.blacksoil.remotesync.backend.ssh;
 
 import com.intellij.openapi.diagnostic.Logger;
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.Session;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.OutputStream;
 import java.util.List;
-import java.util.Properties;
 import lombok.experimental.UtilityClass;
+import org.blacksoil.remotesync.backend.ssh.client.DefaultSshClient;
+import org.blacksoil.remotesync.backend.ssh.client.SshClient;
 
 @UtilityClass
 public class SshUploader {
-
   private final Logger LOG = Logger.getInstance(SshUploader.class);
-  private final int SSH_PORT = 22;
-  private final int BUFFER_SIZE = 1024;
 
   public void uploadFiles(
       List<String> files,
@@ -26,18 +19,14 @@ public class SshUploader {
       String username,
       String password)
       throws Exception {
-
-    try (SshSession session = new SshSession(host, username, password)) {
-      for (String relativePath : files) {
-        File localFile = new File(localRoot, relativePath);
+    try (SshClient client = new DefaultSshClient(host, username, password)) {
+      for (String path : files) {
+        File localFile = new File(localRoot, path);
         if (!localFile.exists()) {
           LOG.warn("Skipping missing file: " + localFile.getAbsolutePath());
           continue;
         }
-
-        String remoteFile = remotePath + "/" + relativePath;
-        session.uploadFile(localFile, remoteFile);
-        LOG.info("Uploaded: " + localFile.getPath() + " → " + remoteFile);
+        client.uploadFile(localFile, remotePath + "/" + path);
       }
     }
   }
@@ -45,87 +34,16 @@ public class SshUploader {
   public void deleteFiles(
       List<String> files, String remotePath, String host, String username, String password)
       throws Exception {
-
-    try (SshSession session = new SshSession(host, username, password)) {
-      for (String relativePath : files) {
-        String remoteFile = remotePath + "/" + relativePath;
-        session.deleteFile(remoteFile);
-        LOG.info("Deleted: " + remoteFile);
+    try (SshClient client = new DefaultSshClient(host, username, password)) {
+      for (String path : files) {
+        client.deleteFile(remotePath + "/" + path);
       }
     }
   }
-  public static void testConnection(String host, String username, String password) throws Exception {
-    try (SshSession ignored = new SshSession(host, username, password)) {
-      LOG.info("Test connection.");
-      // Если подключение успешно — ничего не делаем
-    }
-  }
 
-  private class SshSession implements AutoCloseable {
-    private final Session session;
-
-    SshSession(String host, String username, String password) throws Exception {
-      JSch jsch = new JSch();
-      this.session = jsch.getSession(username, host, SSH_PORT);
-      session.setPassword(password);
-      configureSession();
-      session.connect();
-    }
-
-    private void configureSession() {
-      Properties config = new Properties();
-      config.put("StrictHostKeyChecking", "no");
-      session.setConfig(config);
-    }
-
-    private void uploadFile(File localFile, String remoteFilePath) throws Exception {
-      String command = "scp -t " + escape(remoteFilePath);
-      ChannelExec channel = (ChannelExec) session.openChannel("exec");
-      channel.setCommand(command);
-
-      try (OutputStream out = channel.getOutputStream();
-          FileInputStream fis = new FileInputStream(localFile)) {
-
-        channel.connect();
-
-        String meta = String.format("C0644 %d %s%n", localFile.length(), localFile.getName());
-        out.write(meta.getBytes());
-        out.flush();
-
-        byte[] buffer = new byte[BUFFER_SIZE];
-        int len;
-        while ((len = fis.read(buffer)) != -1) {
-          out.write(buffer, 0, len);
-        }
-
-        out.write(0); // End of stream
-        out.flush();
-      } finally {
-        channel.disconnect();
-      }
-    }
-
-    private void deleteFile(String remoteFilePath) throws Exception {
-      String command = "rm -f " + escape(remoteFilePath);
-      ChannelExec channel = (ChannelExec) session.openChannel("exec");
-      channel.setCommand(command);
-
-      try {
-        channel.connect();
-      } finally {
-        channel.disconnect();
-      }
-    }
-
-    private String escape(String path) {
-      return path.replace(" ", "\\ ");
-    }
-
-    @Override
-    public void close() {
-      if (session != null && session.isConnected()) {
-        session.disconnect();
-      }
+  public void testConnection(String host, String username, String password) throws Exception {
+    try (SshClient ignored = new DefaultSshClient(host, username, password)) {
+      LOG.info("Connection OK");
     }
   }
 }
