@@ -10,13 +10,14 @@ import java.util.Collections;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 import org.blacksoil.remotesync.backend.validator.GitDiffValidator;
+import org.blacksoil.remotesync.common.DiffResult;
 
 @UtilityClass
 public class GitDiffDetector {
   private final Logger LOG = Logger.getInstance(GitDiffDetector.class);
 
   public DiffResult getChangedFiles(String projectDir, String branch) {
-    if (GitDiffValidator.isValid(projectDir, branch)) {
+    if (!GitDiffValidator.isValid(projectDir, branch)) {
       LOG.warn(String.format("Invalid input: projectDir=%s, branch=%s", projectDir, branch));
       return new DiffResult(List.of(), List.of());
     }
@@ -59,7 +60,7 @@ public class GitDiffDetector {
       }
 
     } catch (Exception e) {
-      LOG.error(MessageFormat.format("Git command failed: {0}", String.join(" ", args), e));
+      LOG.error(MessageFormat.format("Git command failed: {0}", String.join(" ", args)));
     }
 
     return result;
