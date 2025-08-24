@@ -1,35 +1,41 @@
 package org.blacksoil.remotesync.page.welcome;
 
-import com.intellij.ide.plugins.IdeaPluginDescriptor;
-import com.intellij.ide.plugins.PluginManagerCore;
-import com.intellij.ide.util.PropertiesComponent;
-import com.intellij.openapi.extensions.PluginId;
-import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManagerListener;
+import org.blacksoil.remotesync.page.welcome.service.DefaultWelcomeFacadeServices;
+import org.blacksoil.remotesync.page.welcome.service.WelcomeFacadeServices;
 import org.jetbrains.annotations.NotNull;
 
-public final class WelcomeProjectListener implements ProjectManagerListener {
-  private static final String PLUGIN_ID = "org.blacksoil.remotesync";
+public record WelcomeProjectListener(WelcomeFacadeServices services)
+    implements ProjectManagerListener {
+
+  /** Прод-конструктор (используется IDE). */
+  public WelcomeProjectListener() {
+    this(new DefaultWelcomeFacadeServices());
+  }
+
+  /** Тестируемый конструктор. */
+  public WelcomeProjectListener {}
+
+  static String buildKey(String version) {
+    return "remoteSync.welcome.shown." + version;
+  }
 
   @Override
   @SuppressWarnings("removal")
   public void projectOpened(@NotNull Project project) {
-    IdeaPluginDescriptor d = PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID));
-    if (d == null) return;
+    String version = services.getPluginVersionOrNull();
+    if (version == null) return;
 
-    String key = "remoteSync.welcome.shown." + d.getVersion();
-    PropertiesComponent pc = PropertiesComponent.getInstance(project);
-    if (pc.getBoolean(key, false)) return;
+    String key = buildKey(version);
+    if (services.isShown(project, key)) return;
 
-    // дождёмся Smart Mode (аналог RequiredForSmartMode)
-    DumbService.getInstance(project)
-        .runWhenSmart(
-            () -> {
-              if (project.isDisposed()) return;
-              FileEditorManager.getInstance(project).openFile(new WelcomeVirtualFile(), true);
-              pc.setValue(key, true);
-            });
+    services.runWhenSmart(
+        project,
+        () -> {
+          if (project.isDisposed()) return;
+          services.openWelcome(project);
+          services.setShown(project, key, true);
+        });
   }
 }

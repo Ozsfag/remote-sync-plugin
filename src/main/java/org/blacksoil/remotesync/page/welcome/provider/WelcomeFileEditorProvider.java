@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.page.welcome;
+package org.blacksoil.remotesync.page.welcome.provider;
 
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorPolicy;
@@ -6,6 +6,8 @@ import com.intellij.openapi.fileEditor.FileEditorProvider;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import org.blacksoil.remotesync.page.welcome.WelcomeFileEditor;
+import org.blacksoil.remotesync.page.welcome.WelcomeVirtualFile;
 import org.jetbrains.annotations.NotNull;
 
 public class WelcomeFileEditorProvider implements FileEditorProvider, DumbAware {

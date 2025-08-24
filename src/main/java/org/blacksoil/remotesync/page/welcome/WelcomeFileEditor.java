@@ -1,89 +1,75 @@
 package org.blacksoil.remotesync.page.welcome;
 
-import com.intellij.ide.plugins.PluginManagerCore;
-import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorState;
-import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.JBScrollPane;
-import com.intellij.ui.jcef.JBCefApp;
-import com.intellij.ui.jcef.JBCefBrowser;
 import java.awt.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import javax.swing.*;
+import org.blacksoil.remotesync.page.welcome.browserAdapter.BrowserAdapter;
+import org.blacksoil.remotesync.page.welcome.htmlLoader.*;
+import org.blacksoil.remotesync.page.welcome.provider.browser.BrowserProvider;
+import org.blacksoil.remotesync.page.welcome.provider.browser.DefaultBrowserProvider;
+import org.blacksoil.remotesync.page.welcome.provider.version.IntellijPluginVersionProvider;
+import org.blacksoil.remotesync.page.welcome.provider.version.PluginVersionProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class WelcomeFileEditor extends UserDataHolderBase implements FileEditor {
-  private static final String PLUGIN_ID = "org.blacksoil.remotesync";
-
   private final JPanel panel;
   private final JComponent focus;
   private final VirtualFile file;
   private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
-  private JBCefBrowser browser;
 
+  // Прод-конструктор (обратная совместимость)
   public WelcomeFileEditor(@NotNull VirtualFile file) {
+    this(
+        file,
+        new DefaultBrowserProvider(),
+        new ClasspathHtmlLoader(),
+        new IntellijPluginVersionProvider());
+  }
+
+  // Тестируемый конструктор (DI)
+  public WelcomeFileEditor(
+      @NotNull VirtualFile file,
+      @NotNull BrowserProvider browserProvider,
+      @NotNull HtmlLoader htmlLoader,
+      @NotNull PluginVersionProvider versionProvider) {
     this.file = file;
     this.panel = new JPanel(new BorderLayout());
-    String version = pluginVersion();
+    String version = versionProvider.getVersionOrDefault();
 
-    URL welcomeUrl = getRes("welcome/welcome.html");
-    URL fallbackUrl = getRes("welcome/fallback.html");
+    String html =
+        firstNotNull(
+            htmlLoader.loadOrNull("welcome/welcome.html"),
+            htmlLoader.loadOrNull("welcome/fallback.html"));
+    if (html != null) {
+      html = html.replace("${version}", version);
+    }
 
-    if (JBCefApp.isSupported()) {
-      browser = new JBCefBrowser();
-      Disposer.register(this, browser);
-
-      String html = readOrNull(getRes("welcome/welcome.html"));
-      if (html == null) html = readOrNull(getRes("welcome/fallback.html"));
-      if (html != null) {
-        html = html.replace("${version}", version);
-        browser.loadHTML(html); // ✅ вот ключевая часть
-      }
-
-      focus = browser.getComponent();
+    if (browserProvider.isSupported()) {
+      // nullable в режиме fallback
+      BrowserAdapter browserAdapter = browserProvider.create();
+      if (html != null) browserAdapter.loadHtml(html);
+      focus = browserAdapter.getComponent();
     } else {
       // Swing fallback
       JEditorPane pane = new JEditorPane();
       pane.setEditable(false);
       pane.setContentType("text/html");
-
-      String html = readOrNull(welcomeUrl);
-      if (html == null) html = readOrNull(fallbackUrl);
-      if (html != null) {
-        html = html.replace("${version}", version);
-        pane.setText(html);
-      }
-
+      if (html != null) pane.setText(html);
       focus = new JBScrollPane(pane);
     }
 
     panel.add(focus, BorderLayout.CENTER);
   }
 
-  private static @Nullable URL getRes(String path) {
-    return WelcomeFileEditor.class.getClassLoader().getResource(path);
-  }
-
-  private static String readOrNull(@Nullable URL url) {
-    if (url == null) return null;
-    try (InputStream is = url.openStream()) {
-      return new String(is.readAllBytes(), StandardCharsets.UTF_8);
-    } catch (Exception ignored) {
-      return null;
-    }
-  }
-
-  private static String pluginVersion() {
-    var d = PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID));
-    return d != null ? d.getVersion() : "0.0.0";
+  private static String firstNotNull(String a, String b) {
+    return a != null ? a : b;
   }
 
   @Override
@@ -126,10 +112,7 @@ public final class WelcomeFileEditor extends UserDataHolderBase implements FileE
 
   @Override
   public void dispose() {
-    if (browser != null) {
-      browser.dispose();
-      browser = null;
-    }
+    /* браузер диспоузится GC-ом; JCEF управляется IDE */
   }
 
   @Override
