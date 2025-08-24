@@ -13,17 +13,17 @@ import org.blacksoil.remotesync.ui.view.component.RemoteSyncViewComponents;
 import org.blacksoil.remotesync.ui.view.factory.RemoteSyncViewFactory;
 import org.jetbrains.annotations.NotNull;
 
+@Getter
 public final class RemoteSyncView {
 
-  @Getter private final JPanel root;
+  private final JPanel root;
 
-  // геттеры для валидатора/контроллера
-  // поля
-  @Getter private final JTextField usernameField;
-  @Getter private final JTextField ipField;
-  @Getter private final JTextField passwordField; // JPasswordField тоже годится как JTextField
-  @Getter private final JTextField remotePathField;
-  @Getter private final JTextField branchField;
+  // поля формы
+  private final JTextField usernameField;
+  private final JTextField ipField;
+  private final JTextField passwordField; // JPasswordField совместим как JTextField
+  private final JTextField remotePathField;
+  private final JTextField branchField;
 
   // действия/статус
   private final JButton testButton;
@@ -37,7 +37,6 @@ public final class RemoteSyncView {
   private Runnable onChange = () -> {};
 
   public RemoteSyncView() {
-    // ВСЁ создание делегировано фабрике
     RemoteSyncViewComponents c = RemoteSyncViewFactory.create();
 
     this.root = c.root();
@@ -51,16 +50,11 @@ public final class RemoteSyncView {
     this.progressBar = c.progressBar();
     this.statusLabel = c.statusLabel();
 
-    // поведение
     wireEnterAndChangeListeners();
     wireButtons();
   }
 
-  // ---------- public API ----------
-
-  private static String n(String v) {
-    return v == null ? "" : v;
-  }
+  // --- API ---
 
   public void setData(@NotNull FormData d) {
     usernameField.setText(n(d.username()));
@@ -74,7 +68,7 @@ public final class RemoteSyncView {
     return new FormData(
         usernameField.getText(),
         ipField.getText(),
-        passwordField.getText(), // JPasswordField.getText() ок для UI DTO
+        passwordField.getText(),
         remotePathField.getText(),
         branchField.getText());
   }
@@ -95,6 +89,7 @@ public final class RemoteSyncView {
     c.putClientProperty("JComponent.outline", error ? "error" : null);
   }
 
+  // callbacks
   public void onSync(Runnable r) {
     this.onSync = Objects.requireNonNull(r);
   }
@@ -103,11 +98,11 @@ public final class RemoteSyncView {
     this.onTest = Objects.requireNonNull(r);
   }
 
-  // ---------- internal behavior wiring ----------
-
   public void onChange(Runnable r) {
     this.onChange = Objects.requireNonNull(r);
   }
+
+  // --- wiring ---
 
   private void wireButtons() {
     syncButton.addActionListener(e -> onSync.run());
@@ -130,7 +125,7 @@ public final class RemoteSyncView {
     branchField.getDocument().addDocumentListener(dl);
   }
 
-  // small helper to avoid boilerplate
+  // helper
   private record SimpleDocListener(Runnable r) implements DocumentListener {
     @Override
     public void insertUpdate(DocumentEvent e) {
@@ -146,5 +141,9 @@ public final class RemoteSyncView {
     public void changedUpdate(DocumentEvent e) {
       r.run();
     }
+  }
+
+  private static String n(String v) {
+    return v == null ? "" : v;
   }
 }
