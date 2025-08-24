@@ -9,14 +9,16 @@ import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Properties;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class SshUploader {
 
-  private static final Logger LOG = Logger.getInstance(SshUploader.class);
-  private static final int SSH_PORT = 22;
-  private static final int BUFFER_SIZE = 1024;
+  private final Logger LOG = Logger.getInstance(SshUploader.class);
+  private final int SSH_PORT = 22;
+  private final int BUFFER_SIZE = 1024;
 
-  public static void uploadFiles(
+  public void uploadFiles(
       List<String> files,
       String localRoot,
       String remotePath,
@@ -40,7 +42,7 @@ public class SshUploader {
     }
   }
 
-  public static void deleteFiles(
+  public void deleteFiles(
       List<String> files, String remotePath, String host, String username, String privateKeyPath)
       throws Exception {
 
@@ -53,7 +55,7 @@ public class SshUploader {
     }
   }
 
-  private static class SshSession implements AutoCloseable {
+  private class SshSession implements AutoCloseable {
     private final Session session;
 
     SshSession(String host, String username, String privateKeyPath) throws Exception {
@@ -70,7 +72,7 @@ public class SshUploader {
       session.setConfig(config);
     }
 
-    void uploadFile(File localFile, String remoteFilePath) throws Exception {
+    private void uploadFile(File localFile, String remoteFilePath) throws Exception {
       String command = "scp -t " + escape(remoteFilePath);
       ChannelExec channel = (ChannelExec) session.openChannel("exec");
       channel.setCommand(command);
@@ -97,7 +99,7 @@ public class SshUploader {
       }
     }
 
-    void deleteFile(String remoteFilePath) throws Exception {
+    private void deleteFile(String remoteFilePath) throws Exception {
       String command = "rm -f " + escape(remoteFilePath);
       ChannelExec channel = (ChannelExec) session.openChannel("exec");
       channel.setCommand(command);

@@ -3,6 +3,8 @@ package org.blacksoil.remotesync.ui.service;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import java.util.List;
+
+import org.blacksoil.remotesync.backend.diff.DiffResult;
 import org.blacksoil.remotesync.backend.diff.GitDiffDetector;
 import org.blacksoil.remotesync.backend.ssh.SshUploader;
 import org.blacksoil.remotesync.ui.secret.Secrets;
@@ -23,7 +25,7 @@ public class RemoteSyncService {
       callback.onStatus("Detecting changes...");
       String projectPath = project.getBasePath();
 
-      GitDiffDetector.DiffResult diff = GitDiffDetector.getChangedFiles(projectPath, state.branch);
+      DiffResult diff = GitDiffDetector.getChangedFiles(projectPath, state.branch);
       List<String> changed = diff.addedOrModified();
       List<String> deleted = diff.deleted();
 
