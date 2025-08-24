@@ -1,8 +1,8 @@
 package org.blacksoil.remotesync.ui.model;
 
 import com.intellij.openapi.project.Project;
-import org.blacksoil.remotesync.secret.Secrets;
-import org.blacksoil.remotesync.settings.RemoteSyncSettings;
+import org.blacksoil.remotesync.ui.secret.Secrets;
+import org.blacksoil.remotesync.ui.settings.RemoteSyncSettings;
 import org.jetbrains.annotations.NotNull;
 
 /**

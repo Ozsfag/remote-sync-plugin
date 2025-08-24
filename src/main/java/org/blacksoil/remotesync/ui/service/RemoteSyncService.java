@@ -1,12 +1,12 @@
-package org.blacksoil.remotesync.service;
+package org.blacksoil.remotesync.ui.service;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import java.util.List;
-import org.blacksoil.remotesync.GitDiffDetector;
-import org.blacksoil.remotesync.SshUploader;
-import org.blacksoil.remotesync.secret.Secrets;
-import org.blacksoil.remotesync.settings.RemoteSyncSettings;
+import org.blacksoil.remotesync.backend.diff.GitDiffDetector;
+import org.blacksoil.remotesync.backend.ssh.SshUploader;
+import org.blacksoil.remotesync.ui.secret.Secrets;
+import org.blacksoil.remotesync.ui.settings.RemoteSyncSettings;
 
 public class RemoteSyncService {
   private static final Logger LOG = Logger.getInstance(RemoteSyncService.class);

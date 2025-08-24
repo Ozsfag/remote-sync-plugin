@@ -1,10 +1,9 @@
-package org.blacksoil.remotesync.settings;
+package org.blacksoil.remotesync.ui.settings;
 
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.project.Project;
-import javax.swing.*;
 import org.jetbrains.annotations.NotNull;
 
 @State(

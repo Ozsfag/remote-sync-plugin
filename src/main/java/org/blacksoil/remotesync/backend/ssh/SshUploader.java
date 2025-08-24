@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync;
+package org.blacksoil.remotesync.backend.ssh;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.jcraft.jsch.ChannelExec;

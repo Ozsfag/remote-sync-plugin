@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.welcome;
+package org.blacksoil.remotesync.page.welcome;
 
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorPolicy;
