@@ -3,12 +3,10 @@ package org.blacksoil.remotesync.ui.view.component;
 import com.intellij.ui.components.JBPasswordField;
 import com.intellij.ui.components.JBTextField;
 import javax.swing.*;
+import lombok.Builder;
 
-/**
- * @param root корневой контейнер с собранной формой
- * @param usernameField поля формы
- * @param testButton действия / статус
- */
+/** Снимок созданных виджетов вьюхи. */
+@Builder(toBuilder = true)
 public record RemoteSyncViewComponents(
     JPanel root,
     JBTextField usernameField,

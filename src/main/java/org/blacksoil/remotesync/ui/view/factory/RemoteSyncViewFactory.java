@@ -15,14 +15,14 @@ import com.intellij.util.ui.JBFont;
 import com.intellij.util.ui.JBUI;
 import java.awt.*;
 import javax.swing.*;
+import lombok.experimental.UtilityClass;
 import org.blacksoil.remotesync.ui.view.component.RemoteSyncViewComponents;
 import org.jetbrains.annotations.NotNull;
 
-public final class RemoteSyncViewFactory {
+@UtilityClass
+public class RemoteSyncViewFactory {
 
   private static final int LABEL_LEFT_PAD = 12;
-
-  private RemoteSyncViewFactory() {}
 
   public static RemoteSyncViewComponents create() {
     // --- поля ---
@@ -89,17 +89,18 @@ public final class RemoteSyncViewFactory {
             .addComponent(statusLabel)
             .getPanel();
 
-    return new RemoteSyncViewComponents(
-        root,
-        usernameField,
-        ipField,
-        passwordField,
-        remotePathField,
-        branchField,
-        testButton,
-        syncButton,
-        progressBar,
-        statusLabel);
+    return RemoteSyncViewComponents.builder()
+        .root(root)
+        .usernameField(usernameField)
+        .ipField(ipField)
+        .passwordField(passwordField)
+        .remotePathField(remotePathField)
+        .branchField(branchField)
+        .testButton(testButton)
+        .syncButton(syncButton)
+        .progressBar(progressBar)
+        .statusLabel(statusLabel)
+        .build();
   }
 
   // ---------- private helpers ----------

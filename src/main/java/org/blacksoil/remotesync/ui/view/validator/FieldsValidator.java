@@ -3,15 +3,14 @@ package org.blacksoil.remotesync.ui.view.validator;
 import javax.swing.*;
 import org.blacksoil.remotesync.ui.view.RemoteSyncView;
 
-/** Простая валидация формы + подсветка ошибок через outline. */
 public record FieldsValidator(RemoteSyncView view) {
 
-    private static boolean notEmpty(JTextField f) {
+  private static boolean notEmpty(JTextField f) {
     String s = f.getText();
     return s != null && !s.trim().isEmpty();
   }
 
-  private static void clear(JComponent c) {
+  private static void clearOutline(JComponent c) {
     c.putClientProperty("JComponent.outline", null);
   }
 
@@ -34,10 +33,10 @@ public record FieldsValidator(RemoteSyncView view) {
 
   /** Сбрасывает подсветку у всех полей. Полезно перед повторной валидацией. */
   public void clear() {
-    clear(view.getUsernameField());
-    clear(view.getIpField());
-    clear(view.getPasswordField());
-    clear(view.getRemotePathField());
-    clear(view.getBranchField());
+    clearOutline(view.getUsernameField());
+    clearOutline(view.getIpField());
+    clearOutline(view.getPasswordField());
+    clearOutline(view.getRemotePathField());
+    clearOutline(view.getBranchField());
   }
 }
