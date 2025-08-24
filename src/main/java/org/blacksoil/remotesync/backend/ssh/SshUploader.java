@@ -24,10 +24,10 @@ public class SshUploader {
       String remotePath,
       String host,
       String username,
-      String privateKeyPath)
+      String password)
       throws Exception {
 
-    try (SshSession session = new SshSession(host, username, privateKeyPath)) {
+    try (SshSession session = new SshSession(host, username, password)) {
       for (String relativePath : files) {
         File localFile = new File(localRoot, relativePath);
         if (!localFile.exists()) {
@@ -43,10 +43,10 @@ public class SshUploader {
   }
 
   public void deleteFiles(
-      List<String> files, String remotePath, String host, String username, String privateKeyPath)
+      List<String> files, String remotePath, String host, String username, String password)
       throws Exception {
 
-    try (SshSession session = new SshSession(host, username, privateKeyPath)) {
+    try (SshSession session = new SshSession(host, username, password)) {
       for (String relativePath : files) {
         String remoteFile = remotePath + "/" + relativePath;
         session.deleteFile(remoteFile);
@@ -54,14 +54,20 @@ public class SshUploader {
       }
     }
   }
+  public static void testConnection(String host, String username, String password) throws Exception {
+    try (SshSession ignored = new SshSession(host, username, password)) {
+      LOG.info("Test connection.");
+      // Если подключение успешно — ничего не делаем
+    }
+  }
 
   private class SshSession implements AutoCloseable {
     private final Session session;
 
-    SshSession(String host, String username, String privateKeyPath) throws Exception {
+    SshSession(String host, String username, String password) throws Exception {
       JSch jsch = new JSch();
-      jsch.addIdentity(privateKeyPath);
       this.session = jsch.getSession(username, host, SSH_PORT);
+      session.setPassword(password);
       configureSession();
       session.connect();
     }
