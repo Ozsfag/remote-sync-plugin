@@ -8,12 +8,14 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import lombok.experimental.UtilityClass;
 import org.blacksoil.remotesync.backend.validator.GitDiffValidator;
 
+@UtilityClass
 public class GitDiffDetector {
-  private static final Logger LOG = Logger.getInstance(GitDiffDetector.class);
+  private final Logger LOG = Logger.getInstance(GitDiffDetector.class);
 
-  public static DiffResult getChangedFiles(String projectDir, String branch) {
+  public DiffResult getChangedFiles(String projectDir, String branch) {
     if (GitDiffValidator.isValid(projectDir, branch)) {
       LOG.warn(String.format("Invalid input: projectDir=%s, branch=%s", projectDir, branch));
       return new DiffResult(List.of(), List.of());
@@ -27,7 +29,7 @@ public class GitDiffDetector {
     return new DiffResult(addedOrModified, deleted);
   }
 
-  private static List<String> runGitCommand(String directory, String... args) {
+  private List<String> runGitCommand(String directory, String... args) {
     List<String> result = new ArrayList<>();
 
     try {
@@ -62,6 +64,4 @@ public class GitDiffDetector {
 
     return result;
   }
-
-  public record DiffResult(List<String> addedOrModified, List<String> deleted) {}
 }
