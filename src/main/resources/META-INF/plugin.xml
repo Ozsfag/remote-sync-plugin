@@ -26,7 +26,8 @@
     <!-- Расширения -->
     <extensions defaultExtensionNs="com.intellij">
 
-        <fileEditorProvider implementation="org.blacksoil.remotesync.page.welcome.WelcomeFileEditorProvider"/>
+        <fileEditorProvider
+                implementation="org.blacksoil.remotesync.page.welcome.ui.provider.WelcomeFileEditorProvider"/>
 
         <!-- Tool Window -->
         <toolWindow
@@ -40,11 +41,13 @@
                 serviceInterface="org.blacksoil.remotesync.ui.settings.RemoteSyncSettings"
                 serviceImplementation="org.blacksoil.remotesync.ui.settings.RemoteSyncSettings"/>
 
+        <errorHandler implementation="org.blacksoil.remotesync.error.RemoteSyncErrorReportSubmitter"/>
+
     </extensions>
 
     <projectListeners>
         <listener
-                class="org.blacksoil.remotesync.page.welcome.WelcomeProjectListener"
+                class="org.blacksoil.remotesync.page.welcome.listener.WelcomeProjectListener"
                 topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </projectListeners>
 </idea-plugin>
