@@ -1,11 +1,12 @@
 package org.blacksoil.remotesync.core.gitdiff;
 
 import com.intellij.openapi.diagnostic.Logger;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.experimental.UtilityClass;
+import org.blacksoil.remotesync.core.model.DiffResult;
 import org.blacksoil.remotesync.infrastructure.git.DefaultGitCommandExecutor;
 import org.blacksoil.remotesync.infrastructure.git.GitCommandExecutor;
-import org.blacksoil.remotesync.core.model.DiffResult;
 
 @UtilityClass
 public class GitDiffDetector {
@@ -24,11 +25,20 @@ public class GitDiffDetector {
       return new DiffResult(List.of(), List.of());
     }
 
-    List<String> addedOrModified =
-        customExecutor.runGitCommand(projectDir, "diff", "--name-only", "origin/" + branch);
-    List<String> deleted =
-        customExecutor.runGitCommand(
-            projectDir, "diff", "--name-only", "--diff-filter=D", "origin/" + branch);
+    List<String> output =
+        customExecutor.runGitCommand(projectDir, "diff", "--name-status", "origin/" + branch);
+
+    List<String> addedOrModified = new ArrayList<>();
+    List<String> deleted = new ArrayList<>();
+
+    for (String line : output) {
+      LOG.info("git diff: " + line);
+      if (line.startsWith("A") || line.startsWith("M")) {
+        addedOrModified.add(line.substring(1).trim());
+      } else if (line.startsWith("D")) {
+        deleted.add(line.substring(1).trim());
+      }
+    }
 
     return new DiffResult(addedOrModified, deleted);
   }

@@ -27,6 +27,13 @@ public class RemoteSyncErrorReportSubmitter extends ErrorReportSubmitter {
       @NotNull Component parentComponent,
       @NotNull Consumer<? super SubmittedReportInfo> consumer) {
 
+    if (events.length == 0) {
+      consumer.consume(
+          new SubmittedReportInfo(
+              null, "No event information", SubmittedReportInfo.SubmissionStatus.FAILED));
+      return false;
+    }
+
     new Thread(
             () -> {
               try {
@@ -34,7 +41,7 @@ public class RemoteSyncErrorReportSubmitter extends ErrorReportSubmitter {
                 IssueReporter reporter =
                     new GitHubIssueReporter(config, HttpClient.newHttpClient());
 
-                boolean success = isSuccess(events, additionalInfo, reporter);
+                boolean success = isSuccess(events[0], additionalInfo, reporter);
 
                 consumer.consume(
                     new SubmittedReportInfo(
@@ -58,16 +65,20 @@ public class RemoteSyncErrorReportSubmitter extends ErrorReportSubmitter {
   }
 
   private static boolean isSuccess(
-      @NotNull IdeaLoggingEvent[] events, @Nullable String additionalInfo, IssueReporter reporter)
+      @NotNull IdeaLoggingEvent event, @Nullable String additionalInfo, IssueReporter reporter)
       throws Exception {
 
-    IdeaLoggingEvent event = events[0];
-    String title = "[RemoteSync] " + event.getThrowableText().split("\n")[0];
+    String throwableText = event.getThrowableText();
+    if (throwableText.isBlank()) {
+      throwableText = event.getMessage() != null ? event.getMessage() : "Unknown error";
+    }
+
+    String title = "[RemoteSync] " + throwableText.split("\n")[0];
     String body =
         "### Description\n"
             + (additionalInfo != null ? additionalInfo : "_No user description_\n")
             + "\n\n### Stacktrace\n```text\n"
-            + event.getThrowableText()
+            + throwableText
             + "\n```";
 
     return reporter.submitIssue(title, body);

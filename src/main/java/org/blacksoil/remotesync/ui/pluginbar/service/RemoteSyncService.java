@@ -5,8 +5,8 @@ import com.intellij.openapi.project.Project;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 import org.blacksoil.remotesync.core.gitdiff.GitDiffDetector;
-import org.blacksoil.remotesync.core.ssh.SshUploader;
 import org.blacksoil.remotesync.core.model.DiffResult;
+import org.blacksoil.remotesync.core.ssh.SshUploader;
 import org.blacksoil.remotesync.ui.pluginbar.secret.Secrets;
 import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
 

@@ -20,4 +20,5 @@ public enum RemoteSyncNowAction {
   private final String startMessage;
   private final String successMessage;
   private final String failurePrefix;
+
 }
