@@ -41,6 +41,8 @@
                 serviceInterface="org.blacksoil.remotesync.ui.settings.RemoteSyncSettings"
                 serviceImplementation="org.blacksoil.remotesync.ui.settings.RemoteSyncSettings"/>
 
+        <errorHandler implementation="org.blacksoil.remotesync.error.RemoteSyncErrorReportSubmitter"/>
+
     </extensions>
 
     <projectListeners>

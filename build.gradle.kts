@@ -17,6 +17,7 @@ dependencies {
     }
 
     implementation(libs.jsch)
+    implementation(libs.org.json)
 
     // Lombok (если нужен в коде плагина)
     compileOnly(libs.lombok)
@@ -63,3 +64,18 @@ tasks.test {
 tasks.register("publishRelease", fun Task.() {
     dependsOn("buildPlugin", "signPlugin", "publishPlugin")
 })
+
+tasks.named<org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask>("runIde") {
+    val githubToken = System.getenv("REMOTE_SYNC_GH_TOKEN")
+    val repoOwner = System.getenv("REMOTE_SYNC_REPO_OWNER")
+    val repoName = System.getenv("REMOTE_SYNC_REPO_NAME")
+
+    if (githubToken != null && repoOwner != null && repoName != null) {
+        println("✅ Injecting GitHub secrets into JVM")
+        this.jvmArgs = listOf(
+            "-DGITHUB_TOKEN=$githubToken", "-DGITHUB_REPO_OWNER=$repoOwner", "-DGITHUB_REPO_NAME=$repoName"
+        )
+    } else {
+        println("⚠️ GitHub secrets not found — bug reporting may fail")
+    }
+}
