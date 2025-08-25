@@ -13,6 +13,11 @@ jobs:
     permissions:
       contents: read
 
+    env:  # 🔽 Передаём переменные для ErrorReportSubmitter
+      REMOTE_SYNC_GH_TOKEN: ${{ secrets.REMOTE_SYNC_GH_TOKEN }}
+      REMOTE_SYNC_REPO_OWNER: ${{ secrets.REMOTE_SYNC_REPO_OWNER }}
+      REMOTE_SYNC_REPO_NAME: ${{ secrets.REMOTE_SYNC_REPO_NAME }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,7 +34,6 @@ jobs:
       - name: Ensure gradlew is executable (safety)
         run: chmod +x gradlew
 
-      # Один вызов Gradle с нужными задачами — без shell-команд
       - name: Build, Sign & Publish
         uses: gradle/gradle-build-action@v2
         with:
@@ -37,7 +41,6 @@ jobs:
         env:
           JB_PUBLISH_TOKEN: ${{ secrets.JB_PUBLISH_TOKEN }}
 
-      # Артефакт с zip плагина — на всякий случай
       - name: Upload plugin artifact
         uses: actions/upload-artifact@v4
         with:
