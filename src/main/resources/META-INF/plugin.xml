@@ -27,27 +27,27 @@
     <extensions defaultExtensionNs="com.intellij">
 
         <fileEditorProvider
-                implementation="org.blacksoil.remotesync.page.welcome.ui.provider.WelcomeFileEditorProvider"/>
+                implementation="org.blacksoil.remotesync.ui.welcomepage.ui.provider.WelcomeFileEditorProvider"/>
 
         <!-- Tool Window -->
         <toolWindow
                 id="Remote Sync"
                 anchor="bottom"
-                factoryClass="org.blacksoil.remotesync.ui.screens.RemoteSyncToolWindow"
+                factoryClass="org.blacksoil.remotesync.ui.pluginbar.screens.RemoteSyncToolWindow"
                 icon="/icons/icon.svg"/>
 
         <!-- Сервис хранения состояния -->
         <projectService
-                serviceInterface="org.blacksoil.remotesync.ui.settings.RemoteSyncSettings"
-                serviceImplementation="org.blacksoil.remotesync.ui.settings.RemoteSyncSettings"/>
+                serviceInterface="org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings"
+                serviceImplementation="org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings"/>
 
-        <errorHandler implementation="org.blacksoil.remotesync.error.RemoteSyncErrorReportSubmitter"/>
+        <errorHandler implementation="org.blacksoil.remotesync.error.submission.RemoteSyncErrorReportSubmitter"/>
 
     </extensions>
 
     <projectListeners>
         <listener
-                class="org.blacksoil.remotesync.page.welcome.listener.WelcomeProjectListener"
+                class="org.blacksoil.remotesync.ui.welcomepage.listener.WelcomeProjectListener"
                 topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </projectListeners>
 </idea-plugin>
