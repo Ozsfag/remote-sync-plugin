@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.ui;
+package org.blacksoil.remotesync.ui.components;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
@@ -9,9 +9,9 @@ import com.intellij.openapi.util.Disposer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import javax.swing.*;
-import org.blacksoil.remotesync.ui.enums.Action;
+import org.blacksoil.remotesync.ui.actions.RemoteSyncNowAction;
 import org.blacksoil.remotesync.ui.model.FormData;
-import org.blacksoil.remotesync.ui.report.StatusReporter;
+import org.blacksoil.remotesync.ui.service.StatusReporter;
 import org.blacksoil.remotesync.ui.service.RemoteSyncService;
 import org.blacksoil.remotesync.ui.settings.RemoteSyncSettings;
 import org.blacksoil.remotesync.ui.util.Debouncer;
@@ -66,7 +66,7 @@ public final class RemoteSyncPanel implements Disposable {
         status::info,
         err -> status.error("Connection failed: " + err),
         () -> status.ok("Connection successful"),
-        Action.TEST);
+        RemoteSyncNowAction.TEST);
   }
 
   private void runSync() {
@@ -92,7 +92,7 @@ public final class RemoteSyncPanel implements Disposable {
         status::info,
         err -> status.error("Sync failed: " + err),
         () -> status.ok("Sync complete"),
-        Action.SYNC);
+        RemoteSyncNowAction.SYNC);
   }
 
   /** flush debounce → persist текущих значений формы. */
@@ -113,12 +113,12 @@ public final class RemoteSyncPanel implements Disposable {
       Consumer<String> onStatus,
       Consumer<String> onError,
       Runnable onSuccess,
-      Action action) {
+      RemoteSyncNowAction remoteSyncNowAction) {
 
     new Task.Backgroundable(project, title, true) {
       @Override
       public void run(@NotNull ProgressIndicator indicator) {
-        if (action == Action.TEST) {
+        if (remoteSyncNowAction == RemoteSyncNowAction.TEST) {
           RemoteSyncService.testConnection(
               project,
               settings.getState(),

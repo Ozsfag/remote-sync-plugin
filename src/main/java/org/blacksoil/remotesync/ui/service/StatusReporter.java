@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.ui.report;
+package org.blacksoil.remotesync.ui.service;
 
 import com.intellij.ui.JBColor;
 import java.awt.*;

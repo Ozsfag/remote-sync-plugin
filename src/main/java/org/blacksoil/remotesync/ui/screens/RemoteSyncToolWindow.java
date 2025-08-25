@@ -1,14 +1,14 @@
-package org.blacksoil.remotesync.ui.factory;
+package org.blacksoil.remotesync.ui.screens;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import org.blacksoil.remotesync.ui.RemoteSyncPanel;
+import org.blacksoil.remotesync.ui.components.RemoteSyncPanel;
 import org.jetbrains.annotations.NotNull;
 
-public class RemoteSyncToolWindowFactory implements ToolWindowFactory {
+public class RemoteSyncToolWindow implements ToolWindowFactory {
   @Override
   public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
     // контент тул‑виндоу сам является Disposable

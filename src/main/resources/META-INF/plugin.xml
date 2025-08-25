@@ -33,7 +33,7 @@
         <toolWindow
                 id="Remote Sync"
                 anchor="bottom"
-                factoryClass="org.blacksoil.remotesync.ui.factory.RemoteSyncToolWindowFactory"
+                factoryClass="org.blacksoil.remotesync.ui.screens.RemoteSyncToolWindow"
                 icon="/icons/icon.svg"/>
 
         <!-- Сервис хранения состояния -->

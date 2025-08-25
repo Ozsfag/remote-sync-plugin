@@ -1,11 +1,11 @@
-package org.blacksoil.remotesync.ui.enums;
+package org.blacksoil.remotesync.ui.actions;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum Action {
+public enum RemoteSyncNowAction {
   TEST(false, "Test connection", "Testing connection...", "Connection ok.", "Test failed: "),
   SYNC(
       true,
