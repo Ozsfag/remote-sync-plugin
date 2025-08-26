@@ -6,4 +6,6 @@ public interface SshClient extends AutoCloseable {
   void uploadFile(File local, String remotePath) throws Exception;
 
   void deleteFile(String remotePath) throws Exception;
+
+  boolean directoryExists(String remotePath) throws Exception;
 }

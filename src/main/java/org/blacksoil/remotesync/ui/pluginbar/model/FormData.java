@@ -14,7 +14,8 @@ public record FormData(
     String ip,
     String password, // хранится только в памяти, в Settings не пишем
     String remotePath,
-    String branch) {
+    String branch,
+    String gitUrlField) {
 
   /** Считывает данные из Settings + пароль из Secrets. */
   public static @NotNull FormData from(
@@ -23,9 +24,10 @@ public record FormData(
     String i = n(s.ip);
     String r = n(s.remotePath);
     String b = n(s.branch);
+    String g = n(s.gitUrl);
     if (b.isEmpty()) b = "main";
     String p = Secrets.loadPassword(project, i, u);
-    return new FormData(u, i, p, r, b);
+    return new FormData(u, i, p, r, b, g);
   }
 
   private static String n(String v) {

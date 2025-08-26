@@ -35,14 +35,44 @@ public class DefaultSshClient implements SshClient {
     session.connect(TIMEOUT_MS);
   }
 
+  private static void checkAck(InputStream in) throws IOException {
+    int b = in.read();
+    if (b == 0) return; // OK
+    if (b == -1) throw new EOFException("SCP ack: EOF");
+    if (b == 1 || b == 2) { // 1: error, 2: fatal error
+      StringBuilder sb = new StringBuilder();
+      int c;
+      while ((c = in.read()) != '\n' && c != -1) sb.append((char) c);
+      throw new IOException("SCP error: " + sb);
+    }
+    throw new IOException("SCP unexpected ack: " + b);
+  }
+
+  private static void waitForExit(ChannelExec ch) throws InterruptedException {
+    // Подождём до секунды для заполнения exitStatus
+    for (int i = 0; i < 100 && ch.getExitStatus() == -1; i++) {
+      Thread.sleep(10);
+    }
+  }
+
+  private static String parentDir(String path) {
+    int i = path.lastIndexOf('/');
+    return i <= 0 ? "/" : path.substring(0, i);
+  }
+
+  private static String escape(String path) {
+    // экранирование пробелов и базовых спецсимволов для sh
+    String p = path.replace("\\", "\\\\").replace("\"", "\\\"");
+    return "\"" + p + "\"";
+  }
+
   @Override
   public void uploadFile(File localFile, String remoteFilePath) throws Exception {
-    String target = normalizeRemotePath(remoteFilePath);
-    String remoteDir = parentDir(target);
+    String remoteDir = parentDir(remoteFilePath);
     execMkdirs(remoteDir);
 
     // Открываем exec канал под scp -t
-    String cmd = "scp -t " + escape(target);
+    String cmd = "scp -t " + escape(remoteDir);
     ChannelExec channel = (ChannelExec) session.openChannel("exec");
     channel.setCommand(cmd);
 
@@ -80,8 +110,7 @@ public class DefaultSshClient implements SshClient {
 
   @Override
   public void deleteFile(String remoteFilePath) throws Exception {
-    String target = normalizeRemotePath(remoteFilePath);
-    String cmd = "rm -f " + escape(target);
+    String cmd = "rm -f " + escape(remoteFilePath);
 
     ChannelExec channel = (ChannelExec) session.openChannel("exec");
     channel.setCommand(cmd);
@@ -99,6 +128,30 @@ public class DefaultSshClient implements SshClient {
     } finally {
       channel.disconnect();
     }
+  }
+
+  @Override
+  public boolean directoryExists(String remotePath) throws Exception {
+    String command = "[ -d \"" + remotePath + "\" ] && echo exists || echo missing";
+    String result = executeCommand(command).trim();
+
+    System.out.println(
+        "Executed: " + command + " → Response: " + result); // на случай, если логов не видно
+    return "exists".equals(result);
+  }
+
+  private String executeCommand(String command) throws Exception {
+    ChannelExec channel = (ChannelExec) session.openChannel("exec");
+    channel.setCommand(command);
+
+    ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+    channel.setOutputStream(responseStream);
+
+    channel.connect(TIMEOUT_MS);
+    waitForExit(channel);
+    channel.disconnect();
+
+    return responseStream.toString(StandardCharsets.UTF_8);
   }
 
   private void execMkdirs(String dir) throws Exception {
@@ -119,43 +172,6 @@ public class DefaultSshClient implements SshClient {
     } finally {
       channel.disconnect();
     }
-  }
-
-  private static void checkAck(InputStream in) throws IOException {
-    int b = in.read();
-    if (b == 0) return; // OK
-    if (b == -1) throw new EOFException("SCP ack: EOF");
-    if (b == 1 || b == 2) { // 1: error, 2: fatal error
-      StringBuilder sb = new StringBuilder();
-      int c;
-      while ((c = in.read()) != '\n' && c != -1) sb.append((char) c);
-      throw new IOException("SCP error: " + sb);
-    }
-    throw new IOException("SCP unexpected ack: " + b);
-  }
-
-  private static void waitForExit(ChannelExec ch) throws InterruptedException {
-    // Подождём до секунды для заполнения exitStatus
-    for (int i = 0; i < 100 && ch.getExitStatus() == -1; i++) {
-      Thread.sleep(10);
-    }
-  }
-
-  private static String normalizeRemotePath(String p) {
-    String s = p.replace('\\', '/').trim();
-    // уберём повторные // (кроме ведущего слэша)
-    return s.replaceAll("(?<!:)/{2,}", "/");
-  }
-
-  private static String parentDir(String path) {
-    int i = path.lastIndexOf('/');
-    return i <= 0 ? "/" : path.substring(0, i);
-  }
-
-  private static String escape(String path) {
-    // экранирование пробелов и базовых спецсимволов для sh
-    String p = path.replace("\\", "\\\\").replace("\"", "\\\"");
-    return "\"" + p + "\"";
   }
 
   @Override

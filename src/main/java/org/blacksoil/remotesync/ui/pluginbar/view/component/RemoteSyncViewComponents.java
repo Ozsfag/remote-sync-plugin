@@ -14,6 +14,7 @@ public record RemoteSyncViewComponents(
     JBPasswordField passwordField,
     JBTextField remotePathField,
     JBTextField branchField,
+    JBTextField gitUrlField,
     JButton testButton,
     JButton syncButton,
     JProgressBar progressBar,

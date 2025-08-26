@@ -18,20 +18,18 @@ public final class RemoteSyncView {
 
   private final JPanel root;
 
-  // поля формы
   private final JTextField usernameField;
   private final JTextField ipField;
-  private final JTextField passwordField; // JPasswordField совместим как JTextField
+  private final JTextField passwordField;
   private final JTextField remotePathField;
   private final JTextField branchField;
+  private final JTextField gitUrlField;
 
-  // действия/статус
   private final JButton testButton;
   private final JButton syncButton;
   private final JProgressBar progressBar;
   private final JLabel statusLabel;
 
-  // callbacks
   private Runnable onSync = () -> {};
   private Runnable onTest = () -> {};
   private Runnable onChange = () -> {};
@@ -45,6 +43,7 @@ public final class RemoteSyncView {
     this.passwordField = c.passwordField();
     this.remotePathField = c.remotePathField();
     this.branchField = c.branchField();
+    this.gitUrlField = c.gitUrlField();
     this.testButton = c.testButton();
     this.syncButton = c.syncButton();
     this.progressBar = c.progressBar();
@@ -53,8 +52,6 @@ public final class RemoteSyncView {
     wireEnterAndChangeListeners();
     wireButtons();
   }
-
-  // --- API ---
 
   private static String n(String v) {
     return v == null ? "" : v;
@@ -66,15 +63,18 @@ public final class RemoteSyncView {
     passwordField.setText(n(d.password()));
     remotePathField.setText(n(d.remotePath()));
     branchField.setText(n(d.branch()));
+    gitUrlField.setText(n(d.gitUrlField()));
   }
 
   public @NotNull FormData collectData() {
     return new FormData(
-        usernameField.getText(),
-        ipField.getText(),
-        passwordField.getText(),
-        remotePathField.getText(),
-        branchField.getText());
+            usernameField.getText(),
+            ipField.getText(),
+            passwordField.getText(),
+            remotePathField.getText(),
+            branchField.getText(),
+            gitUrlField.getText()
+    );
   }
 
   public void setBusy(boolean busy) {
@@ -88,12 +88,10 @@ public final class RemoteSyncView {
     statusLabel.setForeground(color != null ? color : JBColor.foreground());
   }
 
-  /** Подсветка/сброс ошибки вокруг поля. */
   public void markError(JComponent c, boolean error) {
     c.putClientProperty("JComponent.outline", error ? "error" : null);
   }
 
-  // callbacks
   public void onSync(Runnable r) {
     this.onSync = Objects.requireNonNull(r);
   }
@@ -101,8 +99,6 @@ public final class RemoteSyncView {
   public void onTest(Runnable r) {
     this.onTest = Objects.requireNonNull(r);
   }
-
-  // --- wiring ---
 
   public void onChange(Runnable r) {
     this.onChange = Objects.requireNonNull(r);
@@ -120,6 +116,7 @@ public final class RemoteSyncView {
     passwordField.addActionListener(onEnter);
     remotePathField.addActionListener(onEnter);
     branchField.addActionListener(onEnter);
+    gitUrlField.addActionListener(onEnter);
 
     DocumentListener dl = new SimpleDocListener(() -> onChange.run());
     usernameField.getDocument().addDocumentListener(dl);
@@ -127,23 +124,12 @@ public final class RemoteSyncView {
     passwordField.getDocument().addDocumentListener(dl);
     remotePathField.getDocument().addDocumentListener(dl);
     branchField.getDocument().addDocumentListener(dl);
+    gitUrlField.getDocument().addDocumentListener(dl);
   }
 
-  // helper
   private record SimpleDocListener(Runnable r) implements DocumentListener {
-    @Override
-    public void insertUpdate(DocumentEvent e) {
-      r.run();
-    }
-
-    @Override
-    public void removeUpdate(DocumentEvent e) {
-      r.run();
-    }
-
-    @Override
-    public void changedUpdate(DocumentEvent e) {
-      r.run();
-    }
+    @Override public void insertUpdate(DocumentEvent e) { r.run(); }
+    @Override public void removeUpdate(DocumentEvent e) { r.run(); }
+    @Override public void changedUpdate(DocumentEvent e) { r.run(); }
   }
 }

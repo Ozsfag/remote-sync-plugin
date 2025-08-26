@@ -15,6 +15,8 @@ import com.intellij.util.ui.JBFont;
 import com.intellij.util.ui.JBUI;
 import java.awt.*;
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import lombok.experimental.UtilityClass;
 import org.blacksoil.remotesync.ui.pluginbar.view.component.RemoteSyncViewComponents;
 import org.jetbrains.annotations.NotNull;
@@ -25,30 +27,47 @@ public class RemoteSyncViewFactory {
   private static final int LABEL_LEFT_PAD = 12;
 
   public static RemoteSyncViewComponents create() {
-    // --- поля ---
     JBTextField usernameField = new JBTextField();
     JBTextField ipField = new JBTextField();
     JBPasswordField passwordField = new JBPasswordField();
     JBTextField remotePathField = new JBTextField();
     JBTextField branchField = new JBTextField();
+    JBTextField gitUrlField = new JBTextField();
 
-    // плейсхолдеры/подсказки
     usernameField.getEmptyText().setText("admin");
-    usernameField.setToolTipText("Username for SSH login");
-
     ipField.getEmptyText().setText("192.168.1.100");
-    ipField.setToolTipText("Remote server IP or hostname");
-
-    passwordField.getEmptyText().setText("Username password");
-    passwordField.setToolTipText("password");
-
-    remotePathField.getEmptyText().setText("git@github.com:client/project.git");
-    remotePathField.setToolTipText("Remote directory or Git remote");
-
+    passwordField.getEmptyText().setText("SSH password");
+    remotePathField.getEmptyText().setText("~/project");
     branchField.getEmptyText().setText("main");
-    branchField.setToolTipText("Git branch to compare changes against (e.g., main)");
+    gitUrlField.getEmptyText().setText("https://github.com/user/repo.git");
+    gitUrlField.setToolTipText("Git remote URL (auto-fills remote path)");
 
-    // --- кнопки/индикатор/статус ---
+    gitUrlField
+        .getDocument()
+        .addDocumentListener(
+            new DocumentListener() {
+              private void update() {
+                String url = gitUrlField.getText();
+                if (url.endsWith(".git")) url = url.substring(0, url.length() - 4);
+                if (url.contains("/")) {
+                  String repo = url.substring(url.lastIndexOf('/') + 1);
+                  remotePathField.setText("~/" + repo);
+                }
+              }
+
+              public void insertUpdate(DocumentEvent e) {
+                update();
+              }
+
+              public void removeUpdate(DocumentEvent e) {
+                update();
+              }
+
+              public void changedUpdate(DocumentEvent e) {
+                update();
+              }
+            });
+
     JButton testButton = new JButton("Test connection");
     JButton syncButton = new JButton("Save & Sync");
     JProgressBar progressBar = new JProgressBar();
@@ -58,33 +77,24 @@ public class RemoteSyncViewFactory {
     JLabel statusLabel = new JLabel("Status: Ready");
     statusLabel.setBorder(JBUI.Borders.empty(6, 12, 12, 12));
 
-    // действия строка
     JComponent actionsRow = buildActionsRow(testButton, progressBar, syncButton);
 
-    // секции
     TitledSeparator sshSep = new TitledSeparator("Remote server");
     sshSep.setBorder(JBUI.Borders.empty(4, 12, 2, 12));
     TitledSeparator gitSep = new TitledSeparator("Git");
     gitSep.setBorder(JBUI.Borders.empty(8, 12, 2, 12));
 
-    // лейблы с левым отступом
-    JLabel userLabel = padLabel("Username");
-    JLabel ipLabel = padLabel("IP address");
-    JLabel passLabel = padLabel("Password");
-    JLabel remoteLabel = padLabel("Git remote path");
-    JLabel branchLabel = padLabel("Git branch");
-
-    // корень формы
     JPanel root =
         FormBuilder.createFormBuilder()
             .addComponent(buildHeader())
             .addComponent(sshSep, 1)
-            .addLabeledComponent(userLabel, usernameField, 1, false)
-            .addLabeledComponent(ipLabel, ipField, 1, false)
-            .addLabeledComponent(passLabel, passwordField, 1, false)
+            .addLabeledComponent(padLabel("Username"), usernameField, 1, false)
+            .addLabeledComponent(padLabel("IP address"), ipField, 1, false)
+            .addLabeledComponent(padLabel("Password"), passwordField, 1, false)
             .addComponent(gitSep, 1)
-            .addLabeledComponent(remoteLabel, remotePathField, 1, false)
-            .addLabeledComponent(branchLabel, branchField, 1, false)
+            .addLabeledComponent(padLabel("Git remote URL"), gitUrlField, 1, false)
+            .addLabeledComponent(padLabel("Server remote path"), remotePathField, 1, false)
+            .addLabeledComponent(padLabel("Git branch"), branchField, 1, false)
             .addComponentToRightColumn(actionsRow, 1)
             .addComponent(statusLabel)
             .getPanel();
@@ -96,14 +106,13 @@ public class RemoteSyncViewFactory {
         .passwordField(passwordField)
         .remotePathField(remotePathField)
         .branchField(branchField)
+        .gitUrlField(gitUrlField)
         .testButton(testButton)
         .syncButton(syncButton)
         .progressBar(progressBar)
         .statusLabel(statusLabel)
         .build();
   }
-
-  // ---------- private helpers ----------
 
   private static JLabel padLabel(String text) {
     JLabel l = new JLabel(text);

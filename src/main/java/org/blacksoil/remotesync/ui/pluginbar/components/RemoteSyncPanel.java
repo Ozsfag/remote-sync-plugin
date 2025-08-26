@@ -11,8 +11,8 @@ import java.util.function.Consumer;
 import javax.swing.*;
 import org.blacksoil.remotesync.ui.pluginbar.actions.RemoteSyncNowAction;
 import org.blacksoil.remotesync.ui.pluginbar.model.FormData;
-import org.blacksoil.remotesync.ui.pluginbar.service.StatusReporter;
 import org.blacksoil.remotesync.ui.pluginbar.service.RemoteSyncService;
+import org.blacksoil.remotesync.ui.pluginbar.service.StatusReporter;
 import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
 import org.blacksoil.remotesync.ui.pluginbar.util.Debouncer;
 import org.blacksoil.remotesync.ui.pluginbar.view.RemoteSyncView;
@@ -21,16 +21,13 @@ import org.jetbrains.annotations.NotNull;
 
 public final class RemoteSyncPanel implements Disposable {
 
-  // deps
   private final Project project;
   private final RemoteSyncSettings settings;
 
-  // ui
   private final RemoteSyncView view = new RemoteSyncView();
   private final StatusReporter status = new StatusReporter(view);
   private final FieldsValidator validator = new FieldsValidator(view);
 
-  // utils
   private final Debouncer saveDebounce = new Debouncer(400);
   private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -51,8 +48,6 @@ public final class RemoteSyncPanel implements Disposable {
     return view.getRoot();
   }
 
-  // ================= orchestration =================
-
   private void runTestConnection() {
     if (!validator.validate()) {
       status.error("Please fill in all required fields.");
@@ -64,7 +59,13 @@ public final class RemoteSyncPanel implements Disposable {
     runBackground(
         "Testing SSH connection...",
         status::info,
-        err -> status.error("Connection failed: " + err),
+        err -> {
+          if (err.contains("Remote path does not exist")) {
+            status.error("Remote path does not exist on server.");
+          } else {
+            status.error("Connection failed: " + err);
+          }
+        },
         () -> status.ok("Connection successful"),
         RemoteSyncNowAction.TEST);
   }
@@ -95,14 +96,12 @@ public final class RemoteSyncPanel implements Disposable {
         RemoteSyncNowAction.SYNC);
   }
 
-  /** flush debounce → persist текущих значений формы. */
   private void applyPendingAndPersist() {
     if (saveDebounce.hasPending()) status.info("Applying pending changes…");
     saveDebounce.flush();
     autoPersist();
   }
 
-  /** Сохраняет форму в Settings + Secrets. */
   private void autoPersist() {
     FormData d = view.collectData();
     ApplicationManager.getApplication().executeOnPooledThread(() -> d.persist(project, settings));
@@ -165,7 +164,6 @@ public final class RemoteSyncPanel implements Disposable {
     }.queue();
   }
 
-  // ================= Disposable =================
   @Override
   public void dispose() {
     saveDebounce.cancel();

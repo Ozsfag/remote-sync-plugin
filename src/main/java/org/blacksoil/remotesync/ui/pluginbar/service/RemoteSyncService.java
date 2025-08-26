@@ -60,7 +60,7 @@ public class RemoteSyncService {
     try {
       String password = Secrets.loadPassword(project, state.ip, state.username);
       cb.onStatus("Connecting to " + state.ip + "...");
-      SshUploader.testConnection(state.ip, state.username, password);
+      SshUploader.testConnection(state.ip, state.username, password, state.remotePath);
       cb.onComplete();
     } catch (Exception e) {
       cb.onError(e.getMessage());

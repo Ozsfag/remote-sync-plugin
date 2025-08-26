@@ -32,5 +32,6 @@ public class RemoteSyncSettings implements PersistentStateComponent<RemoteSyncSe
     public String ip = "";
     public String remotePath = "";
     public String branch = "";
+    public String gitUrl = "";
   }
 }
