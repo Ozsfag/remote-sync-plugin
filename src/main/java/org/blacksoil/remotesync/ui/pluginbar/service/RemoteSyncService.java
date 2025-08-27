@@ -9,13 +9,14 @@ import org.blacksoil.remotesync.core.model.DiffResult;
 import org.blacksoil.remotesync.core.ssh.SshUploader;
 import org.blacksoil.remotesync.core.ssh.path.RemotePathResolver;
 import org.blacksoil.remotesync.ui.pluginbar.secret.Secrets;
+import org.blacksoil.remotesync.ui.pluginbar.service.task.api.TaskCallback;
 import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
 
 @UtilityClass
 public class RemoteSyncService {
   private final Logger LOG = Logger.getInstance(RemoteSyncService.class);
 
-  public void sync(Project project, RemoteSyncSettings.State state, SyncCallback callback) {
+  public void sync(Project project, RemoteSyncSettings.State state, TaskCallback callback) {
     if (project == null || state == null || project.getBasePath() == null) {
       LOG.warn("Invalid sync parameters.");
       callback.onError("Invalid project or configuration.");
@@ -64,7 +65,7 @@ public class RemoteSyncService {
     }
   }
 
-  public void testConnection(Project project, RemoteSyncSettings.State state, SyncCallback cb) {
+  public void testConnection(Project project, RemoteSyncSettings.State state, TaskCallback cb) {
     try {
       String password = Secrets.loadPassword(project, state.ip, state.username);
       cb.onStatus("Connecting to " + state.ip + "...");

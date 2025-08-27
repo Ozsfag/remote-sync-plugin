@@ -1,21 +1,19 @@
 package org.blacksoil.remotesync.ui.pluginbar.components;
 
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-import javax.swing.*;
-import org.blacksoil.remotesync.ui.pluginbar.actions.RemoteSyncNowAction;
+import javax.swing.JPanel;
+
+import org.blacksoil.remotesync.ui.pluginbar.components.persistence.RemoteSyncPanelPersistence;
 import org.blacksoil.remotesync.ui.pluginbar.model.FormData;
-import org.blacksoil.remotesync.ui.pluginbar.service.RemoteSyncService;
-import org.blacksoil.remotesync.ui.pluginbar.service.StatusReporter;
-import org.blacksoil.remotesync.ui.pluginbar.service.SyncCallback;
+import org.blacksoil.remotesync.ui.pluginbar.service.*;
+import org.blacksoil.remotesync.ui.pluginbar.service.task.api.RemoteTaskStrategy;
+import org.blacksoil.remotesync.ui.pluginbar.service.task.impl.SyncFilesTaskStrategy;
+import org.blacksoil.remotesync.ui.pluginbar.service.task.impl.TestConnectionTaskStrategy;
 import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
-import org.blacksoil.remotesync.ui.pluginbar.util.Debouncer;
+import org.blacksoil.remotesync.ui.pluginbar.service.task.util.BackgroundTaskRunnerWrapper;
 import org.blacksoil.remotesync.ui.pluginbar.view.RemoteSyncView;
 import org.blacksoil.remotesync.ui.pluginbar.view.validator.FieldsValidator;
 import org.jetbrains.annotations.NotNull;
@@ -29,144 +27,40 @@ public final class RemoteSyncPanel implements Disposable {
   private final StatusReporter status = new StatusReporter(view);
   private final FieldsValidator validator = new FieldsValidator(view);
 
-  private final Debouncer saveDebounce = new Debouncer(400);
   private final AtomicBoolean running = new AtomicBoolean(false);
+  private final RemoteSyncPanelPersistence persistence;
 
   public RemoteSyncPanel(@NotNull Project project, @NotNull Disposable parentDisposable) {
     this.project = project;
     this.settings = RemoteSyncSettings.getInstance(project);
+    this.persistence = new RemoteSyncPanelPersistence(project, settings, 400);
 
     Disposer.register(parentDisposable, this);
 
     view.setData(FormData.from(project, settings.getState()));
-
-    view.onChange(() -> saveDebounce.submit(this::autoPersist));
-    view.onTest(this::runTestConnection);
-    view.onSync(this::runSync);
+    view.onChange(() -> persistence.schedulePersist(view.collectData()));
+    view.onTest(() -> runTask(new TestConnectionTaskStrategy()));
+    view.onSync(() -> runTask(new SyncFilesTaskStrategy()));
   }
 
   public JPanel getContent() {
     return view.getRoot();
   }
 
-  private void runTestConnection() {
-    if (!validator.validate()) {
-      status.error("Please fill in all required fields.");
+  private void runTask(RemoteTaskStrategy task) {
+    if (!task.prepare(project, settings, validator, view, running, persistence, status)) {
       return;
     }
-
-    applyPendingAndPersist();
-
-    runBackground(
-        "Testing SSH connection...",
-        status::info,
-        err -> {
-          if (err.contains("Remote path does not exist")) {
-            status.error("Remote path does not exist on server.");
-          } else {
-            status.error("Connection failed: " + err);
-          }
-        },
-        () -> status.ok("Connection successful"),
-        RemoteSyncNowAction.TEST);
-  }
-
-  private void runSync() {
-    if (!running.compareAndSet(false, true)) {
-      status.info("Another task is already running…");
-      return;
-    }
-
-    view.setBusy(true);
-    status.info("Syncing...");
-
-    if (!validator.validate()) {
-      status.error("Please fill in all required fields.");
-      view.setBusy(false);
-      running.set(false);
-      return;
-    }
-
-    applyPendingAndPersist();
-
-    runBackground(
-        "Running sync...",
-        status::info,
-        err -> status.error("Sync failed: " + err),
-        () -> status.ok("Sync complete"),
-        RemoteSyncNowAction.SYNC);
-  }
-
-  private void applyPendingAndPersist() {
-    if (saveDebounce.hasPending()) status.info("Applying pending changes…");
-    saveDebounce.flush();
-    autoPersist();
-  }
-
-  private void autoPersist() {
-    FormData d = view.collectData();
-    ApplicationManager.getApplication().executeOnPooledThread(() -> d.persist(project, settings));
-  }
-
-  private void runBackground(
-      String title,
-      Consumer<String> onStatus,
-      Consumer<String> onError,
-      Runnable onSuccess,
-      RemoteSyncNowAction remoteSyncNowAction) {
-
-    new Task.Backgroundable(project, title, true) {
-      @Override
-      public void run(@NotNull ProgressIndicator indicator) {
-        if (remoteSyncNowAction == RemoteSyncNowAction.TEST) {
-          RemoteSyncService.testConnection(
-              project,
-              settings.getState(),
-              new SyncCallback() {
-                public void onStatus(String msg) {
-                  indicator.setText(msg);
-                  onStatus.accept(msg);
-                }
-
-                public void onError(String err) {
-                  onError.accept(err);
-                }
-
-                public void onComplete() {
-                  onSuccess.run();
-                }
-              });
-        } else {
-          RemoteSyncService.sync(
-              project,
-              settings.getState(),
-              new SyncCallback() {
-                public void onStatus(String msg) {
-                  indicator.setText(msg);
-                  onStatus.accept(msg);
-                }
-
-                public void onError(String err) {
-                  onError.accept(err);
-                }
-
-                public void onComplete() {
-                  onSuccess.run();
-                }
-              });
-        }
-      }
-
-      @Override
-      public void onFinished() {
-        view.setBusy(false);
-        running.set(false);
-      }
-    }.queue();
+    BackgroundTaskRunnerWrapper.run(
+        project,
+        task,
+        settings.getState(),
+        task.uiCallback(status),
+        () -> task.finish(view, running));
   }
 
   @Override
   public void dispose() {
-    saveDebounce.cancel();
+    persistence.cancel();
   }
 }

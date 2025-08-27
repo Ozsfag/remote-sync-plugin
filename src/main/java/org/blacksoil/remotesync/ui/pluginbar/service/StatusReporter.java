@@ -5,7 +5,6 @@ import java.awt.*;
 import javax.swing.*;
 import org.blacksoil.remotesync.ui.pluginbar.view.RemoteSyncView;
 
-/** Централизованная работа со статусной строкой. */
 public record StatusReporter(RemoteSyncView view) {
 
   public void info(String msg) {
