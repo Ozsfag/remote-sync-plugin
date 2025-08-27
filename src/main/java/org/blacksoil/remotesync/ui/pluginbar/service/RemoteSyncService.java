@@ -7,6 +7,7 @@ import lombok.experimental.UtilityClass;
 import org.blacksoil.remotesync.core.gitdiff.GitDiffDetector;
 import org.blacksoil.remotesync.core.model.DiffResult;
 import org.blacksoil.remotesync.core.ssh.SshUploader;
+import org.blacksoil.remotesync.core.ssh.path.RemotePathResolver;
 import org.blacksoil.remotesync.ui.pluginbar.secret.Secrets;
 import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
 
@@ -61,7 +62,12 @@ public class RemoteSyncService {
       String password = Secrets.loadPassword(project, state.ip, state.username);
       cb.onStatus("Connecting to " + state.ip + "...");
       SshUploader.testConnection(state.ip, state.username, password, state.remotePath);
-      cb.onComplete();
+
+      // ⬇️ Новые строки: сообщаем в GUI о наличии директории
+      String normalized = RemotePathResolver.normalize(state.remotePath, state.username);
+      cb.onStatus("Remote directory exists: " + normalized);
+
+      cb.onComplete(); // как и было
     } catch (Exception e) {
       cb.onError(e.getMessage());
     }
