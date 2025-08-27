@@ -40,12 +40,19 @@ public class RemoteSyncService {
       if (!changed.isEmpty()) {
         callback.onStatus("Uploading " + changed.size() + " file(s)...");
         SshUploader.uploadFiles(
-            changed, projectPath, state.remotePath, state.ip, state.username, password);
+            changed,
+            projectPath,
+            state.remotePath,
+            state.ip,
+            state.username,
+            password,
+            callback::onStatus);
       }
 
       if (!deleted.isEmpty()) {
         callback.onStatus("Deleting " + deleted.size() + " file(s)...");
-        SshUploader.deleteFiles(deleted, state.remotePath, state.ip, state.username, password);
+        SshUploader.deleteFiles(
+            deleted, state.remotePath, state.ip, state.username, password, callback::onStatus);
       }
 
       callback.onStatus("Sync complete.");
@@ -62,22 +69,11 @@ public class RemoteSyncService {
       String password = Secrets.loadPassword(project, state.ip, state.username);
       cb.onStatus("Connecting to " + state.ip + "...");
       SshUploader.testConnection(state.ip, state.username, password, state.remotePath);
-
-      // ⬇️ Новые строки: сообщаем в GUI о наличии директории
       String normalized = RemotePathResolver.normalize(state.remotePath, state.username);
       cb.onStatus("Remote directory exists: " + normalized);
-
-      cb.onComplete(); // как и было
+      cb.onComplete();
     } catch (Exception e) {
       cb.onError(e.getMessage());
     }
-  }
-
-  public interface SyncCallback {
-    void onStatus(String message);
-
-    void onError(String error);
-
-    void onComplete();
   }
 }

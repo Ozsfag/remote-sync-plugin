@@ -13,6 +13,7 @@ import org.blacksoil.remotesync.ui.pluginbar.actions.RemoteSyncNowAction;
 import org.blacksoil.remotesync.ui.pluginbar.model.FormData;
 import org.blacksoil.remotesync.ui.pluginbar.service.RemoteSyncService;
 import org.blacksoil.remotesync.ui.pluginbar.service.StatusReporter;
+import org.blacksoil.remotesync.ui.pluginbar.service.SyncCallback;
 import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
 import org.blacksoil.remotesync.ui.pluginbar.util.Debouncer;
 import org.blacksoil.remotesync.ui.pluginbar.view.RemoteSyncView;
@@ -121,7 +122,7 @@ public final class RemoteSyncPanel implements Disposable {
           RemoteSyncService.testConnection(
               project,
               settings.getState(),
-              new RemoteSyncService.SyncCallback() {
+              new SyncCallback() {
                 public void onStatus(String msg) {
                   indicator.setText(msg);
                   onStatus.accept(msg);
@@ -139,7 +140,7 @@ public final class RemoteSyncPanel implements Disposable {
           RemoteSyncService.sync(
               project,
               settings.getState(),
-              new RemoteSyncService.SyncCallback() {
+              new SyncCallback() {
                 public void onStatus(String msg) {
                   indicator.setText(msg);
                   onStatus.accept(msg);

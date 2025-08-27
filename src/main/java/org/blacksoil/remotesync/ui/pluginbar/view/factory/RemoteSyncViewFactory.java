@@ -24,9 +24,9 @@ import org.jetbrains.annotations.NotNull;
 @UtilityClass
 public class RemoteSyncViewFactory {
 
-  private static final int LABEL_LEFT_PAD = 12;
+  private final int LABEL_LEFT_PAD = 12;
 
-  public static RemoteSyncViewComponents create() {
+  public RemoteSyncViewComponents create() {
     JBTextField usernameField = new JBTextField();
     JBTextField ipField = new JBTextField();
     JBPasswordField passwordField = new JBPasswordField();
@@ -114,13 +114,13 @@ public class RemoteSyncViewFactory {
         .build();
   }
 
-  private static JLabel padLabel(String text) {
+  private JLabel padLabel(String text) {
     JLabel l = new JLabel(text);
     l.setBorder(JBUI.Borders.emptyLeft(LABEL_LEFT_PAD));
     return l;
   }
 
-  private static JComponent buildActionsRow(JButton test, JProgressBar progress, JButton save) {
+  private JComponent buildActionsRow(JButton test, JProgressBar progress, JButton save) {
     JBPanel<?> row = new JBPanel<>(new HorizontalLayout(8));
     save.putClientProperty("JButton.buttonType", "default");
     row.add(test);
@@ -129,7 +129,7 @@ public class RemoteSyncViewFactory {
     return row;
   }
 
-  private static JComponent buildHeader() {
+  private JComponent buildHeader() {
     JPanel header = new JPanel();
     header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
     header.setBorder(JBUI.Borders.empty(6, 12));

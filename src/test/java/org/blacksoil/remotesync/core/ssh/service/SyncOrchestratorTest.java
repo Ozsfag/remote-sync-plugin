@@ -2,6 +2,7 @@ package org.blacksoil.remotesync.core.ssh.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.intellij.util.Consumer;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,8 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class SyncOrchestratorTest {
-
-  // ---- fakes ---------------------------------------------------------------
 
   static final class FakeClient implements SshClient {
     final List<String> uploaded = new ArrayList<>();
@@ -49,11 +48,8 @@ class SyncOrchestratorTest {
     }
   }
 
-  // ---- tests ---------------------------------------------------------------
-
   @Test
   void upload_and_delete_calls_expected_targets(@TempDir Path tmp) throws Exception {
-    // создаём реальные файлы
     Path dir = Files.createDirectories(tmp.resolve("dir"));
     Path a = Files.writeString(tmp.resolve("a.txt"), "a");
     Path b = Files.writeString(dir.resolve("b.txt"), "b");
@@ -61,18 +57,19 @@ class SyncOrchestratorTest {
     var factory = new FakeFactory();
     var orchestrator = new SyncOrchestrator(factory);
 
-    // передаём пути относительно root и нормализуем в '/'
     List<String> files =
         List.of(
             tmp.relativize(a).toString().replace('\\', '/'),
             tmp.relativize(b).toString().replace('\\', '/'));
 
-    orchestrator.uploadFiles(files, tmp.toString(), "~/repo", "h", "alice", "pwd");
+    Consumer<String> progress = s -> {};
+
+    orchestrator.uploadFiles(files, tmp.toString(), "~/repo", "h", "alice", "pwd", progress);
     assertEquals(
         List.of("/home/alice/repo/a.txt", "/home/alice/repo/dir/b.txt"),
         normalize(factory.client.uploaded));
 
-    orchestrator.deleteFiles(files, "~/repo", "h", "alice", "pwd");
+    orchestrator.deleteFiles(files, "~/repo", "h", "alice", "pwd", progress);
     assertEquals(
         List.of("/home/alice/repo/a.txt", "/home/alice/repo/dir/b.txt"),
         normalize(factory.client.deleted));
@@ -81,11 +78,10 @@ class SyncOrchestratorTest {
   @Test
   void testConnection_throws_if_path_missing() {
     var factory = new FakeFactory();
-    factory.client.dirExists = false; // имитация отсутствия директории
+    factory.client.dirExists = false;
 
     var orchestrator = new SyncOrchestrator(factory);
 
-    // В тестовой среде может прилететь любая «обёртка»; проверяем корневую причину
     Throwable thrown =
         assertThrows(
             Throwable.class, () -> orchestrator.testConnection("h", "alice", "pwd", "~/repo"));
@@ -94,8 +90,6 @@ class SyncOrchestratorTest {
     assertInstanceOf(IllegalStateException.class, root);
     assertTrue(root.getMessage().contains("/home/alice/repo"));
   }
-
-  // ---- helpers -------------------------------------------------------------
 
   private static List<String> normalize(List<String> paths) {
     return paths.stream().map(p -> p.replace('\\', '/')).toList();

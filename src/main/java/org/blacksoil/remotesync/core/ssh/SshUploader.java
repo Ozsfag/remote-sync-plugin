@@ -1,9 +1,10 @@
 package org.blacksoil.remotesync.core.ssh;
 
+import com.intellij.util.Consumer;
 import java.util.List;
 import lombok.experimental.UtilityClass;
-import org.blacksoil.remotesync.infrastructure.ssh.factory.DefaultSshClientFactory;
 import org.blacksoil.remotesync.core.ssh.service.SyncOrchestrator;
+import org.blacksoil.remotesync.infrastructure.ssh.factory.DefaultSshClientFactory;
 
 @UtilityClass
 public class SshUploader {
@@ -15,15 +16,21 @@ public class SshUploader {
       String remotePath,
       String host,
       String username,
-      String password)
+      String password,
+      Consumer<String> progress)
       throws Exception {
-    orchestrator.uploadFiles(files, localRoot, remotePath, host, username, password);
+    orchestrator.uploadFiles(files, localRoot, remotePath, host, username, password, progress);
   }
 
   public void deleteFiles(
-      List<String> files, String remotePath, String host, String username, String password)
+      List<String> files,
+      String remotePath,
+      String host,
+      String username,
+      String password,
+      Consumer<String> progress)
       throws Exception {
-    orchestrator.deleteFiles(files, remotePath, host, username, password);
+    orchestrator.deleteFiles(files, remotePath, host, username, password, progress);
   }
 
   public void testConnection(String host, String username, String password, String remotePath)
