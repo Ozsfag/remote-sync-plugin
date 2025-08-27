@@ -1,177 +1,66 @@
 package org.blacksoil.remotesync.infrastructure.ssh.client;
 
-import com.jcraft.jsch.*;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.Properties;
+import com.jcraft.jsch.Session;
+import java.io.File;
+import java.util.Objects;
+import org.blacksoil.remotesync.infrastructure.ssh.exec.JschSshExec;
+import org.blacksoil.remotesync.infrastructure.ssh.exec.SshExec;
+import org.blacksoil.remotesync.infrastructure.ssh.fs.DefaultRemoteFs;
+import org.blacksoil.remotesync.infrastructure.ssh.fs.RemoteFs;
+import org.blacksoil.remotesync.infrastructure.ssh.scp.JschScpUploader;
+import org.blacksoil.remotesync.infrastructure.ssh.scp.ScpUploader;
+import org.blacksoil.remotesync.infrastructure.ssh.session.JschSessionFactory;
+import org.blacksoil.remotesync.infrastructure.ssh.session.SessionFactory;
+import org.blacksoil.remotesync.infrastructure.ssh.util.PathUtils;
 
-public class DefaultSshClient implements SshClient {
-  private static final int SSH_PORT = 22;
-  private static final int TIMEOUT_MS = 15_000;
-  private static final int BUFFER_SIZE = 16 * 1024;
+public class DefaultSshClient implements SshClient, AutoCloseable {
+  private static final int TIMEOUT_MS = 15_000; // держим константу, как раньше (на будущее)
 
   private final Session session;
+  private final RemoteFs fs;
+  private final ScpUploader scp;
 
-  /** Парольная аутентификация. */
+  /** Парольная аутентификация (как раньше). */
   public DefaultSshClient(String host, String username, String password) throws Exception {
-    this(host, username, password, null);
+    this(new JschSessionFactory(), host, username, password);
   }
 
-  /** Если password == null и есть privateKeyPath — используем ключ. */
-  public DefaultSshClient(String host, String username, String password, String privateKeyPath)
+  /** Возможность подменить фабрику (удобно в тестах/настройках). */
+  public DefaultSshClient(
+      SessionFactory sessionFactory, String host, String username, String password)
       throws Exception {
-    JSch jsch = new JSch();
-    if (privateKeyPath != null && !privateKeyPath.isBlank()) {
-      jsch.addIdentity(privateKeyPath);
-    }
-    session = jsch.getSession(username, host, SSH_PORT);
-    if (password != null && !password.isBlank()) {
-      session.setPassword(password);
-    }
-    Properties config = new Properties();
-    // В проде лучше StrictHostKeyChecking=yes и known_hosts
-    config.put("StrictHostKeyChecking", "no");
-    session.setConfig(config);
-    session.connect(TIMEOUT_MS);
-  }
-
-  private static void checkAck(InputStream in) throws IOException {
-    int b = in.read();
-    if (b == 0) return; // OK
-    if (b == -1) throw new EOFException("SCP ack: EOF");
-    if (b == 1 || b == 2) { // 1: error, 2: fatal error
-      StringBuilder sb = new StringBuilder();
-      int c;
-      while ((c = in.read()) != '\n' && c != -1) sb.append((char) c);
-      throw new IOException("SCP error: " + sb);
-    }
-    throw new IOException("SCP unexpected ack: " + b);
-  }
-
-  private static void waitForExit(ChannelExec ch) throws InterruptedException {
-    // Подождём до секунды для заполнения exitStatus
-    for (int i = 0; i < 100 && ch.getExitStatus() == -1; i++) {
-      Thread.sleep(10);
-    }
-  }
-
-  private static String parentDir(String path) {
-    int i = path.lastIndexOf('/');
-    return i <= 0 ? "/" : path.substring(0, i);
-  }
-
-  private static String escape(String path) {
-    // экранирование пробелов и базовых спецсимволов для sh
-    String p = path.replace("\\", "\\\\").replace("\"", "\\\"");
-    return "\"" + p + "\"";
+    Objects.requireNonNull(sessionFactory, "sessionFactory");
+    this.session = sessionFactory.open(host, username, password);
+    SshExec exec = new JschSshExec(session);
+    this.fs = new DefaultRemoteFs(exec);
+    this.scp = new JschScpUploader(session);
   }
 
   @Override
   public void uploadFile(File localFile, String remoteFilePath) throws Exception {
-    String remoteDir = parentDir(remoteFilePath);
-    execMkdirs(remoteDir);
+    Objects.requireNonNull(localFile, "localFile");
+    Objects.requireNonNull(remoteFilePath, "remoteFilePath");
 
-    // Открываем exec канал под scp -t
-    String cmd = "scp -t " + escape(remoteDir);
-    ChannelExec channel = (ChannelExec) session.openChannel("exec");
-    channel.setCommand(cmd);
-
-    try (OutputStream out = channel.getOutputStream();
-        InputStream in = channel.getInputStream();
-        FileInputStream fis = new FileInputStream(localFile)) {
-
-      channel.connect(TIMEOUT_MS);
-
-      // SCP handshake: ждём ACK от scp -t (0 - OK)
-      checkAck(in);
-
-      // отправляем header: C<mode> <size> <filename>\n
-      String header = "C0644 " + localFile.length() + " " + localFile.getName() + "\n";
-      out.write(header.getBytes(StandardCharsets.UTF_8));
-      out.flush();
-      checkAck(in);
-
-      // содержимое файла
-      byte[] buf = new byte[BUFFER_SIZE];
-      int len;
-      while ((len = fis.read(buf)) != -1) {
-        out.write(buf, 0, len);
-      }
-      // zero byte to finish
-      out.write(0);
-      out.flush();
-      checkAck(in);
-    } finally {
-      // дождёмся exit-status (не всегда сразу)
-      waitForExit(channel);
-      channel.disconnect();
-    }
+    String remoteDir = PathUtils.parent(remoteFilePath);
+    fs.mkDirs(remoteDir);
+    scp.upload(localFile, remoteDir, localFile.getName());
   }
 
   @Override
   public void deleteFile(String remoteFilePath) throws Exception {
-    String cmd = "rm -f " + escape(remoteFilePath);
-
-    ChannelExec channel = (ChannelExec) session.openChannel("exec");
-    channel.setCommand(cmd);
-    ByteArrayOutputStream err = new ByteArrayOutputStream();
-    channel.setErrStream(err);
-
-    try {
-      channel.connect(TIMEOUT_MS);
-      waitForExit(channel);
-      int code = channel.getExitStatus();
-      if (code != 0) {
-        throw new IOException(
-            "rm failed with code " + code + ": " + err.toString(StandardCharsets.UTF_8));
-      }
-    } finally {
-      channel.disconnect();
-    }
+    Objects.requireNonNull(remoteFilePath, "remoteFilePath");
+    fs.rm(remoteFilePath);
   }
 
   @Override
   public boolean directoryExists(String remotePath) throws Exception {
-    String command = "[ -d \"" + remotePath + "\" ] && echo exists || echo missing";
-    String result = executeCommand(command).trim();
+    Objects.requireNonNull(remotePath, "remotePath");
+    boolean exists = fs.dirExists(remotePath);
 
-    System.out.println(
-        "Executed: " + command + " → Response: " + result); // на случай, если логов не видно
-    return "exists".equals(result);
-  }
-
-  private String executeCommand(String command) throws Exception {
-    ChannelExec channel = (ChannelExec) session.openChannel("exec");
-    channel.setCommand(command);
-
-    ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
-    channel.setOutputStream(responseStream);
-
-    channel.connect(TIMEOUT_MS);
-    waitForExit(channel);
-    channel.disconnect();
-
-    return responseStream.toString(StandardCharsets.UTF_8);
-  }
-
-  private void execMkdirs(String dir) throws Exception {
-    if (dir == null || dir.isBlank() || "/".equals(dir)) return;
-    String cmd = "mkdir -p " + escape(dir);
-    ChannelExec channel = (ChannelExec) session.openChannel("exec");
-    channel.setCommand(cmd);
-    ByteArrayOutputStream err = new ByteArrayOutputStream();
-    channel.setErrStream(err);
-    try {
-      channel.connect(TIMEOUT_MS);
-      waitForExit(channel);
-      int code = channel.getExitStatus();
-      if (code != 0) {
-        throw new IOException(
-            "mkdir failed with code " + code + ": " + err.toString(StandardCharsets.UTF_8));
-      }
-    } finally {
-      channel.disconnect();
-    }
+    // Сохраняем прежний «видимый» stdout (на случай отсутствия доступа к логам)
+    String cmdEcho = "[ -d \"" + remotePath + "\" ] && echo exists || echo missing";
+    System.out.println("Executed: " + cmdEcho + " → Response: " + (exists ? "exists" : "missing"));
+    return exists;
   }
 
   @Override
