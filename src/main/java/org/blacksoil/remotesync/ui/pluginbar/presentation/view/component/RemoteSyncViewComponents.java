@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.ui.pluginbar.view.component;
+package org.blacksoil.remotesync.ui.pluginbar.presentation.view.component;
 
 import com.intellij.ui.components.JBPasswordField;
 import com.intellij.ui.components.JBTextField;

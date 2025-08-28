@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.ui.pluginbar.components.persistence;
+package org.blacksoil.remotesync.ui.pluginbar.persistence;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;

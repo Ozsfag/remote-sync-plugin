@@ -1,7 +1,6 @@
-package org.blacksoil.remotesync.ui.pluginbar.service.task.impl;
+package org.blacksoil.remotesync.ui.pluginbar.application;
 
 import com.intellij.openapi.progress.ProgressIndicator;
-import org.blacksoil.remotesync.ui.pluginbar.service.task.api.TaskCallback;
 
 public record IndicatorTaskCallback(ProgressIndicator indicator, TaskCallback delegate)
     implements TaskCallback {

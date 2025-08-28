@@ -5,7 +5,7 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import org.blacksoil.remotesync.ui.pluginbar.components.RemoteSyncPanel;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.RemoteSyncPanel;
 import org.jetbrains.annotations.NotNull;
 
 public class RemoteSyncToolWindow implements ToolWindowFactory {

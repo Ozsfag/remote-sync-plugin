@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.ui.pluginbar.view;
+package org.blacksoil.remotesync.ui.pluginbar.presentation.view;
 
 import com.intellij.ui.JBColor;
 import java.awt.*;
@@ -9,8 +9,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import lombok.Getter;
 import org.blacksoil.remotesync.ui.pluginbar.model.FormData;
-import org.blacksoil.remotesync.ui.pluginbar.view.component.RemoteSyncViewComponents;
-import org.blacksoil.remotesync.ui.pluginbar.view.factory.RemoteSyncViewFactory;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.view.component.RemoteSyncViewComponents;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.view.factory.RemoteSyncViewFactory;
 import org.jetbrains.annotations.NotNull;
 
 @Getter

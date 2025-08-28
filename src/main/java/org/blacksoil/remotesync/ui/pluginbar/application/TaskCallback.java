@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.ui.pluginbar.service.task.api;
+package org.blacksoil.remotesync.ui.pluginbar.application;
 
 public interface TaskCallback {
   void onStatus(String message);

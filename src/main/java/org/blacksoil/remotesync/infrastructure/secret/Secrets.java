@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.ui.pluginbar.secret;
+package org.blacksoil.remotesync.infrastructure.secret;
 
 import com.intellij.credentialStore.CredentialAttributes;
 import com.intellij.credentialStore.Credentials;

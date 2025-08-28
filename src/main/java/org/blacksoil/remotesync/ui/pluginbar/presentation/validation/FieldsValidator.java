@@ -1,7 +1,7 @@
-package org.blacksoil.remotesync.ui.pluginbar.view.validator;
+package org.blacksoil.remotesync.ui.pluginbar.presentation.validation;
 
 import javax.swing.*;
-import org.blacksoil.remotesync.ui.pluginbar.view.RemoteSyncView;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.view.RemoteSyncView;
 
 public record FieldsValidator(RemoteSyncView view) {
 

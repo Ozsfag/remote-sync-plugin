@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.ui.pluginbar.view.factory;
+package org.blacksoil.remotesync.ui.pluginbar.presentation.view.factory;
 
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -18,7 +18,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import lombok.experimental.UtilityClass;
-import org.blacksoil.remotesync.ui.pluginbar.view.component.RemoteSyncViewComponents;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.view.component.RemoteSyncViewComponents;
 import org.jetbrains.annotations.NotNull;
 
 @UtilityClass

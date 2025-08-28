@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.ui.pluginbar.components;
+package org.blacksoil.remotesync.ui.pluginbar.presentation;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.project.Project;
@@ -6,16 +6,16 @@ import com.intellij.openapi.util.Disposer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JPanel;
 
-import org.blacksoil.remotesync.ui.pluginbar.components.persistence.RemoteSyncPanelPersistence;
+import org.blacksoil.remotesync.ui.pluginbar.persistence.RemoteSyncPanelPersistence;
 import org.blacksoil.remotesync.ui.pluginbar.model.FormData;
-import org.blacksoil.remotesync.ui.pluginbar.service.*;
-import org.blacksoil.remotesync.ui.pluginbar.service.task.api.RemoteTaskStrategy;
-import org.blacksoil.remotesync.ui.pluginbar.service.task.impl.SyncFilesTaskStrategy;
-import org.blacksoil.remotesync.ui.pluginbar.service.task.impl.TestConnectionTaskStrategy;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.status.StatusReporter;
+import org.blacksoil.remotesync.ui.pluginbar.application.command.RemoteCommand;
+import org.blacksoil.remotesync.ui.pluginbar.application.command.SyncFilesCommand;
+import org.blacksoil.remotesync.ui.pluginbar.application.command.TestConnectionCommand;
 import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
-import org.blacksoil.remotesync.ui.pluginbar.service.task.util.BackgroundTaskRunnerWrapper;
-import org.blacksoil.remotesync.ui.pluginbar.view.RemoteSyncView;
-import org.blacksoil.remotesync.ui.pluginbar.view.validator.FieldsValidator;
+import org.blacksoil.remotesync.ui.pluginbar.application.BackgroundTaskRunnerWrapper;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.view.RemoteSyncView;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.validation.FieldsValidator;
 import org.jetbrains.annotations.NotNull;
 
 public final class RemoteSyncPanel implements Disposable {
@@ -39,15 +39,15 @@ public final class RemoteSyncPanel implements Disposable {
 
     view.setData(FormData.from(project, settings.getState()));
     view.onChange(() -> persistence.schedulePersist(view.collectData()));
-    view.onTest(() -> runTask(new TestConnectionTaskStrategy()));
-    view.onSync(() -> runTask(new SyncFilesTaskStrategy()));
+    view.onTest(() -> runTask(new TestConnectionCommand()));
+    view.onSync(() -> runTask(new SyncFilesCommand()));
   }
 
   public JPanel getContent() {
     return view.getRoot();
   }
 
-  private void runTask(RemoteTaskStrategy task) {
+  private void runTask(RemoteCommand task) {
     if (!task.prepare(project, settings, validator, view, running, persistence, status)) {
       return;
     }

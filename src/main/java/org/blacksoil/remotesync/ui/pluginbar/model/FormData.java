@@ -1,7 +1,7 @@
 package org.blacksoil.remotesync.ui.pluginbar.model;
 
 import com.intellij.openapi.project.Project;
-import org.blacksoil.remotesync.ui.pluginbar.secret.Secrets;
+import org.blacksoil.remotesync.infrastructure.secret.Secrets;
 import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
 import org.jetbrains.annotations.NotNull;
 

@@ -1,4 +1,4 @@
-package org.blacksoil.remotesync.ui.pluginbar.service;
+package org.blacksoil.remotesync.ui.pluginbar.application.service;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -8,8 +8,8 @@ import org.blacksoil.remotesync.core.gitdiff.GitDiffDetector;
 import org.blacksoil.remotesync.core.model.DiffResult;
 import org.blacksoil.remotesync.core.ssh.SshUploader;
 import org.blacksoil.remotesync.core.ssh.path.RemotePathResolver;
-import org.blacksoil.remotesync.ui.pluginbar.secret.Secrets;
-import org.blacksoil.remotesync.ui.pluginbar.service.task.api.TaskCallback;
+import org.blacksoil.remotesync.infrastructure.secret.Secrets;
+import org.blacksoil.remotesync.ui.pluginbar.application.TaskCallback;
 import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
 
 @UtilityClass

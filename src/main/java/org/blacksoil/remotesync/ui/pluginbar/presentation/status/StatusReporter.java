@@ -1,9 +1,9 @@
-package org.blacksoil.remotesync.ui.pluginbar.service;
+package org.blacksoil.remotesync.ui.pluginbar.presentation.status;
 
 import com.intellij.ui.JBColor;
 import java.awt.*;
 import javax.swing.*;
-import org.blacksoil.remotesync.ui.pluginbar.view.RemoteSyncView;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.view.RemoteSyncView;
 
 public record StatusReporter(RemoteSyncView view) {
 
