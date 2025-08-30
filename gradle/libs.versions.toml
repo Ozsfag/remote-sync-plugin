@@ -1,6 +1,6 @@
 [versions]
 jetbrains-intellij-platform = "2.7.2"
-intellij-idea = "2025.2"
+intellij-idea = "2025.2.1"
 lombok = "1.18.32"
 jsch = "0.1.55"
 json = "20250517"

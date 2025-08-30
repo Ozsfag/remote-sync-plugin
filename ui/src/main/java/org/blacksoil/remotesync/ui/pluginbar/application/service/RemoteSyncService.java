@@ -75,9 +75,6 @@ public class RemoteSyncService {
     LOG.warn("Invalid sync parameters.");
     callback.onError("Invalid project or configuration.");
   }
-  private void emptyGitDiffAction() {
-
-  }
 
   public void testConnection(Project project, RemoteSyncSettings.State state, TaskCallback cb) {
     try {

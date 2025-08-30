@@ -28,7 +28,7 @@ public record GitDiffClient(String baseUrl) {
             .build();
 
     HttpResponse<String> httpResponse =
-        HttpClientFactory.client()
+        HttpClientFactory.createClient()
             .send(httpRequest, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
     if (httpResponse.statusCode() / 100 != 2) {
