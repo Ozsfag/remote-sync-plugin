@@ -1,6 +1,6 @@
 server:
-  port: 8080
-  address: 127.0.0.1
+  port: ${SERVER_PORT}
+  address: ${SERVER_ADDRESS}
 spring:
   application:
-    name: git-diff-service
+    name: git-diff-service-service
