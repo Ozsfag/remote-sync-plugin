@@ -3,4 +3,4 @@ server:
   address: ${SERVER_ADDRESS}
 spring:
   application:
-    name: git-diff-service-service
+    name: git-diff-service

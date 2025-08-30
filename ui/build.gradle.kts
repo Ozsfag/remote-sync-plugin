@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.java)
     alias(libs.plugins.intellij.platform)
+    id("idea")
 }
 
 group = "org.blacksoil.ui"
@@ -17,7 +18,6 @@ dependencies {
     }
 
     implementation(project(":shared-dto"))
-    implementation(libs.jsch)
     implementation(libs.org.json)
 
     compileOnly(libs.lombok)
@@ -48,12 +48,28 @@ intellijPlatform {
     }
 }
 
+idea {
+    module {
+        // исключаем кеши и сборку
+        excludeDirs.add(file("$projectDir/.gradle"))
+        excludeDirs.add(file("$projectDir/build"))
+
+    }
+}
+
 tasks.processResources {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 sourceSets {
-    main { resources.srcDirs("src/main/resources") }
+    main {
+        java.setSrcDirs(listOf("src/main/java"))
+        resources.setSrcDirs(listOf("src/main/resources"))
+    }
+    test {
+        java.setSrcDirs(listOf("src/test/java"))
+        resources.setSrcDirs(listOf("src/test/resources"))
+    }
 }
 
 tasks.test {

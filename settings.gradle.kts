@@ -16,4 +16,5 @@ dependencyResolutionManagement {
 }
 include("git-diff-service")
 include("shared-dto")
+include("ssh-sync-service")
 include("ui")
