@@ -28,7 +28,7 @@ public record FieldsValidator(RemoteSyncView view) {
     view.markError(view.getRemotePathField(), !r);
     view.markError(view.getBranchField(), !b);
 
-    return u && i && p && r && b;
+    return !u || !i || !p || !r || !b;
   }
 
   /** Сбрасывает подсветку у всех полей. Полезно перед повторной валидацией. */

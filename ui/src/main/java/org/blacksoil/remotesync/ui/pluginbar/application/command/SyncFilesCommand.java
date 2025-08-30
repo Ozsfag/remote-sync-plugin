@@ -34,7 +34,7 @@ public final class SyncFilesCommand implements RemoteCommand {
     view.setBusy(true);
     status.info("Syncing...");
 
-    if (!validator.validate()) {
+    if (validator.validate()) {
       status.error("Please fill in all required fields.");
       view.setBusy(false);
       running.set(false);
