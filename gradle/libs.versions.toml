@@ -9,6 +9,10 @@ junit = "5.10.2"
 junit4 = "4.13.2"
 mockito = "5.12.0"
 
+spring-context = "7.0.0-M6"
+spring-boot = "3.5.3"
+spring-dependency-management = "1.1.7"
+
 [libraries]
 jsch = { module = "com.jcraft:jsch", version.ref = "jsch" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
@@ -21,6 +25,13 @@ org-json = { module = "org.json:json", version.ref = "json" }
 junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit4 = { module = "junit:junit", version.ref = "junit4" }
+
+spring-context = { module = "org.springframework:spring-context", version.ref = "spring-context" }
+spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter", version.ref = "spring-boot" }
+spring-boot-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "spring-boot" }
+
+spring-boot-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
+
 
 [plugins]
 java = { id = "java" }
