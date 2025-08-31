@@ -5,8 +5,8 @@ import com.intellij.openapi.project.Project;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 import org.blacksoil.remotesync.ui.pluginbar.secret.Secrets;
-import org.blacksoil.shareddto.GitDiffRequest;
-import org.blacksoil.shareddto.GitDiffResponse;
+import org.blacksoil.shareddto.gitdiff.GitDiffRequest;
+import org.blacksoil.shareddto.gitdiff.GitDiffResponse;
 import org.blacksoil.remotesync.ui.pluginbar.app.TaskCallback;
 import org.blacksoil.remotesync.ui.pluginbar.app.client.GitDiffClient;
 import org.blacksoil.remotesync.ui.pluginbar.app.validator.SyncValidator;
@@ -29,7 +29,7 @@ public class RemoteSyncService {
     try {
       callback.onStatus("Detecting changes...");
 
-      GitDiffClient gitDiffClient = new GitDiffClient("http://localhost:8080");
+      GitDiffClient gitDiffClient = new GitDiffClient("http://localhost:8080/api");
       String projectPath = project.getBasePath();
       String branch = state.branch;
 

@@ -1,4 +1,4 @@
-package org.blacksoil.shareddto;
+package org.blacksoil.shareddto.gitdiff;
 
 import java.util.List;
 

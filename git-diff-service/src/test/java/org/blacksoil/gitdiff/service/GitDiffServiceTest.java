@@ -6,7 +6,7 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 
 import org.blacksoil.gitdiff.app.service.GitDiffService;
-import org.blacksoil.shareddto.GitDiffResponse;
+import org.blacksoil.shareddto.gitdiff.GitDiffResponse;
 import org.blacksoil.gitdiff.app.git.GitCommandExecutor;
 import org.junit.jupiter.api.Test;
 

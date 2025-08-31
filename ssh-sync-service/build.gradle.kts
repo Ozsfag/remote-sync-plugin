@@ -7,11 +7,14 @@ group = "org.blacksoil.sshsync"
 version = "1.1.6"
 
 dependencies {
+    implementation(project(":shared-dto"))
     implementation(libs.spring.boot.web)
     implementation(libs.jsch)
 
     compileOnly(libs.lombok)
+    compileOnly(libs.mapstruct)
     annotationProcessor(libs.lombok)
+    annotationProcessor(libs.mapstruct.processor)
     testImplementation(libs.spring.boot.test)
 }
 

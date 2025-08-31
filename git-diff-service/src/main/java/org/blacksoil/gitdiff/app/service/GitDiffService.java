@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.blacksoil.shareddto.GitDiffResponse;
+import org.blacksoil.shareddto.gitdiff.GitDiffResponse;
 import org.blacksoil.gitdiff.app.git.GitCommandExecutor;
 import org.blacksoil.gitdiff.app.validator.GitDiffValidator;
 import org.springframework.stereotype.Service;

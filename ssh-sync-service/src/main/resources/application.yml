@@ -1,6 +1,6 @@
 server:
   port: ${SSH_SYNC_SERVER_PORT:8082}
-  address: ${SSH_SYNC_ADDRESS:172.0.0.2}
+  address: ${SSH_SYNC_ADDRESS:127.0.0.2}
 spring:
   application:
     name: ssh-sync-service
@@ -10,3 +10,9 @@ ssh:
   timeout-ms: 15000
   strict-host-key-checking: false
   preferred-authentications: publickey,password,keyboard-interactive
+
+jobs:
+  pool-size: 0
+  sse-timeout-ms: 0
+  cleanup-interval-ms: 60000
+  ttl-ms: 3600000
