@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import org.blacksoil.sshsync.app.client.SshClient;
-import org.blacksoil.sshsync.domain.service.SshSessionFactory;
+import org.blacksoil.sshsync.domain.service.SshClientFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -32,7 +32,7 @@ class SyncServiceTest {
     Path b = Files.writeString(dir.resolve("b.txt"), "b");
 
     var factory = new FakeFactory();
-    var service = new SyncService(factory);
+    var service = new SyncService(factory); // <-- теперь тип совпадает
 
     List<String> files =
         List.of(
@@ -67,6 +67,8 @@ class SyncServiceTest {
     assertTrue(root.getMessage().contains("/home/alice/repo"));
   }
 
+  // ----- тестовые штуки -----
+
   static final class FakeClient implements SshClient {
     final List<String> uploaded = new ArrayList<>();
     final List<String> deleted = new ArrayList<>();
@@ -91,11 +93,13 @@ class SyncServiceTest {
     public void close() {}
   }
 
-  static final class FakeFactory implements SshSessionFactory {
+  /** Тестовая фабрика теперь реализует SshClientFactory, а не SshTransportFactory. */
+  static final class FakeFactory implements SshClientFactory {
     final FakeClient client = new FakeClient();
 
     @Override
     public SshClient create(String host, String username, String password) {
+      // host/username/password не используются в тесте — это ок.
       return client;
     }
   }

@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.blacksoil.sshsync.app.client.SshClient;
-import org.blacksoil.sshsync.domain.service.SshSessionFactory;
+import org.blacksoil.sshsync.domain.service.SshClientFactory;
 import org.blacksoil.sshsync.domain.util.RemotePathResolver;
 import org.springframework.stereotype.Service;
 
@@ -15,12 +15,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SyncService {
 
-  private final SshSessionFactory sessionFactory;
+  private final SshClientFactory sshClientFactory;
 
   public void testConnection(String host, String user, String pass, String remotePath)
       throws Exception {
     String normalized = RemotePathResolver.normalize(remotePath, user);
-    try (SshClient client = sessionFactory.create(host, user, pass)) {
+    try (SshClient client = sshClientFactory.create(host, user, pass)) {
       if (!client.directoryExists(normalized)) {
         throw new IllegalStateException("Remote path does not exist: " + normalized);
       }
@@ -43,7 +43,7 @@ public class SyncService {
     }
     String base = RemotePathResolver.normalize(remotePath, user);
 
-    try (SshClient client = sessionFactory.create(host, user, pass)) {
+    try (SshClient client = sshClientFactory.create(host, user, pass)) {
       for (String rel : files) {
         File local = new File(localRoot, rel);
         if (!local.exists()) {
@@ -72,7 +72,7 @@ public class SyncService {
     }
     String base = RemotePathResolver.normalize(remotePath, user);
 
-    try (SshClient client = sessionFactory.create(host, user, pass)) {
+    try (SshClient client = sshClientFactory.create(host, user, pass)) {
       for (String rel : files) {
         String target = base + "/" + rel;
         if (progress != null) progress.accept("Deleting: " + rel);

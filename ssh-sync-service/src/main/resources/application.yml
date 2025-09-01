@@ -10,9 +10,3 @@ ssh:
   timeout-ms: 15000
   strict-host-key-checking: false
   preferred-authentications: publickey,password,keyboard-interactive
-
-jobs:
-  pool-size: 0
-  sse-timeout-ms: 0
-  cleanup-interval-ms: 60000
-  ttl-ms: 3600000

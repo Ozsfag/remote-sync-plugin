@@ -2,7 +2,7 @@ package org.blacksoil.shareddto.sshsync;
 
 import java.util.List;
 
-public record UploadMeta(
+public record UploadRequest(
     String host,
     String username,
     String password,
