@@ -1,6 +1,6 @@
 server:
   port: ${SSH_SYNC_SERVER_PORT:8082}
-  address: ${SSH_SYNC_ADDRESS:127.0.0.2}
+  address: ${SSH_SYNC_SERVER_ADDRESS:127.0.0.2}
 spring:
   application:
     name: ssh-sync-service

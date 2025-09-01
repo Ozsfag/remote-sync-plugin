@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.blacksoil.shareddto.gitdiff.GitDiffResponse;
 import org.blacksoil.gitdiff.app.git.GitCommandExecutor;
 import org.blacksoil.gitdiff.app.validator.GitDiffValidator;
+import org.blacksoil.shareddto.gitdiff.GitDiffResponse;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,9 +16,7 @@ public class GitDiffService {
 
   private final GitCommandExecutor executor;
 
-
-  public GitDiffResponse getChangedFiles(
-      String projectDir, String branch) {
+  public GitDiffResponse getChangedFiles(String projectDir, String branch) {
     if (!GitDiffValidator.isValid(projectDir, branch)) {
       log.warn("Invalid input: projectDir={}, branch={}", projectDir, branch);
       return new GitDiffResponse(List.of(), List.of());
