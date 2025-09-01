@@ -18,8 +18,8 @@ jobs:
       REMOTE_SYNC_REPO_OWNER: ${{ secrets.REMOTE_SYNC_REPO_OWNER }}
       REMOTE_SYNC_REPO_NAME: ${{ secrets.REMOTE_SYNC_REPO_NAME }}
 
-      SERVER_PORT: ${{ secrets.GIT_DIFF_SERVER_PORT }}
-      SERVER_ADDRESS: ${{ secrets.GIT_DIFF_SERVER_ADDRESS }}
+      GIT_DIFF_SERVER_PORT: ${{ secrets.GIT_DIFF_SERVER_PORT }}
+      GIT_DIFF_SERVER_ADDRESS: ${{ secrets.GIT_DIFF_SERVER_ADDRESS }}
 
     steps:
       - name: Checkout
@@ -45,8 +45,8 @@ jobs:
         shell: bash
         run: |
           JAR=$(ls git-diff-service/build/libs/git-diff-service-*.jar | head -n1)
-          PORT="${SERVER_PORT}"
-          ADDR="${SERVER_ADDRESS}"
+          PORT="${GIT_DIFF_SERVER_PORT}"
+          ADDR="${GIT_DIFF_SERVER_ADDRESS}"
           nohup java -jar "$JAR" \
             --server.port="$PORT" \
             --server.address="$ADDR" \
