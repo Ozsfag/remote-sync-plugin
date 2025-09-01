@@ -1,4 +1,4 @@
-package org.blacksoil.sshsync.app.client.config;
+package org.blacksoil.sshsync.infra.config;
 
 import com.jcraft.jsch.Session;
 import lombok.RequiredArgsConstructor;
