@@ -7,7 +7,7 @@ import org.blacksoil.shareddto.gitdiff.GitDiffResponse;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/git")
 @RequiredArgsConstructor
 public class GitDiffController {
   private final GitDiffService gitDiffService;

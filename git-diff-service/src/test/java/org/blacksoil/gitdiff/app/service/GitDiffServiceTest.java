@@ -1,13 +1,11 @@
-package org.blacksoil.gitdiff.service;
+package org.blacksoil.gitdiff.app.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
-
-import org.blacksoil.gitdiff.app.service.GitDiffService;
-import org.blacksoil.shareddto.gitdiff.GitDiffResponse;
 import org.blacksoil.gitdiff.app.git.GitCommandExecutor;
+import org.blacksoil.shareddto.gitdiff.GitDiffResponse;
 import org.junit.jupiter.api.Test;
 
 class GitDiffServiceTest {
