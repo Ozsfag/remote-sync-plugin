@@ -21,7 +21,7 @@ public record GitDiffClient(String baseUrl) {
 
     HttpRequest httpRequest =
         HttpRequest.newBuilder()
-            .uri(URI.create(baseUrl + "/diff"))
+            .uri(URI.create(baseUrl + "/api/git/diff"))
             .timeout(Duration.ofSeconds(10))
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(body.toString(), StandardCharsets.UTF_8))
