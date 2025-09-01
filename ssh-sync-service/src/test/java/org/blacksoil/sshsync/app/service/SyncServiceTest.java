@@ -32,7 +32,7 @@ class SyncServiceTest {
     Path b = Files.writeString(dir.resolve("b.txt"), "b");
 
     var factory = new FakeFactory();
-    var service = new SyncService(factory); // <-- теперь тип совпадает
+    var service = new SyncService(factory);
 
     List<String> files =
         List.of(
@@ -67,8 +67,6 @@ class SyncServiceTest {
     assertTrue(root.getMessage().contains("/home/alice/repo"));
   }
 
-  // ----- тестовые штуки -----
-
   static final class FakeClient implements SshClient {
     final List<String> uploaded = new ArrayList<>();
     final List<String> deleted = new ArrayList<>();
@@ -93,13 +91,11 @@ class SyncServiceTest {
     public void close() {}
   }
 
-  /** Тестовая фабрика теперь реализует SshClientFactory, а не SshTransportFactory. */
   static final class FakeFactory implements SshClientFactory {
     final FakeClient client = new FakeClient();
 
     @Override
     public SshClient create(String host, String username, String password) {
-      // host/username/password не используются в тесте — это ок.
       return client;
     }
   }

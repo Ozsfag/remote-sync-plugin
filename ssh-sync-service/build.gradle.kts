@@ -7,6 +7,7 @@ group = "org.blacksoil.sshsync"
 version = "1.1.6"
 
 dependencies {
+    implementation(project(":shared-dto"))
     implementation(libs.spring.boot.web)
     implementation(libs.jsch)
 
