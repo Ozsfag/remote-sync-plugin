@@ -5,9 +5,8 @@ import java.io.File;
 import org.blacksoil.sshsync.domain.util.PathUtils;
 import org.blacksoil.sshsync.infra.exec.SshFileOps;
 import org.blacksoil.sshsync.infra.scp.JschScpUploader;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.cglib.core.internal.Function;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -17,14 +16,13 @@ public class DefaultSshClient implements SshClient, AutoCloseable {
 
   private final Session session;
   private final SshFileOps fileOps;
-  private final ObjectProvider<JschScpUploader> scpProv;
+  private final Function<Session, JschScpUploader> uploaderFactory;
 
-  @Autowired
   public DefaultSshClient(
-      Session session, SshFileOps fileOps, ObjectProvider<JschScpUploader> scpProv) {
+      Session session, SshFileOps fileOps, Function<Session, JschScpUploader> uploaderFactory) {
     this.session = session;
     this.fileOps = fileOps;
-    this.scpProv = scpProv;
+    this.uploaderFactory = uploaderFactory;
   }
 
   @Override
@@ -32,7 +30,7 @@ public class DefaultSshClient implements SshClient, AutoCloseable {
     String remoteDir = PathUtils.parent(remoteFilePath);
     String remoteName = PathUtils.name(remoteFilePath);
     fileOps.mkDirs(session, remoteDir);
-    scpProv.getObject(session).upload(localFile, remoteDir, remoteName);
+    uploaderFactory.apply(session).upload(localFile, remoteDir, remoteName);
   }
 
   @Override

@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.blacksoil.sshsync.app.client.DefaultSshClient;
 import org.blacksoil.sshsync.infra.exec.SshFileOps;
 import org.blacksoil.sshsync.infra.scp.JschScpUploader;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -22,7 +21,15 @@ public class SshClientConfiguration {
   @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
   public DefaultSshClient defaultSshClient(Session session) {
     SshFileOps fileOps = ctx.getBean(SshFileOps.class);
-    ObjectProvider<JschScpUploader> scpProv = ctx.getBeanProvider(JschScpUploader.class);
-    return new DefaultSshClient(session, fileOps, scpProv);
+    SshSyncProperties props = ctx.getBean(SshSyncProperties.class);
+    return new DefaultSshClient(
+        session, fileOps, (s) -> ctx.getBean(JschScpUploader.class, s, fileOps, props));
+  }
+
+  @Bean
+  @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+  public JschScpUploader jschScpUploader(
+      Session session, SshFileOps fileOps, SshSyncProperties props) {
+    return new JschScpUploader(session, fileOps, props);
   }
 }

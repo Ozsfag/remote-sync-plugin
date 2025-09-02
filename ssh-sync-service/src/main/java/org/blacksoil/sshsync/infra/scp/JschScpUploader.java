@@ -7,20 +7,19 @@ import java.nio.charset.StandardCharsets;
 import org.blacksoil.sshsync.domain.util.ShellEscaper;
 import org.blacksoil.sshsync.infra.config.SshSyncProperties;
 import org.blacksoil.sshsync.infra.exec.SshFileOps;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
-@Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class JschScpUploader {
   private final Session session;
-  @Autowired private SshFileOps fileOps;
-  @Autowired private SshSyncProperties props;
+  private final SshFileOps fileOps;
+  private final SshSyncProperties props;
 
-  public JschScpUploader(Session session) {
+  public JschScpUploader(Session session, SshFileOps fileOps, SshSyncProperties props) {
     this.session = session;
+    this.fileOps = fileOps;
+    this.props = props;
   }
 
   private static void waitForExit(ChannelExec ch) throws InterruptedException {
