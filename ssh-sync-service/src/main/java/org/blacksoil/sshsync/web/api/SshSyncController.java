@@ -29,10 +29,10 @@ public class SshSyncController {
     return Map.of("ok", true);
   }
 
-  @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(value = "/upload", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<?> upload(
       @RequestParam(name = "stream", defaultValue = "false") boolean stream,
-      @RequestPart("uploadRequest") UploadRequest uploadRequest) {
+      @RequestBody UploadRequest uploadRequest) {
 
     return sseExec.run(
         stream,
