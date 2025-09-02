@@ -5,6 +5,9 @@ import com.jcraft.jsch.Session;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import org.blacksoil.sshsync.domain.util.ShellEscaper;
+import org.blacksoil.sshsync.infra.config.SshSyncProperties;
+import org.blacksoil.sshsync.infra.exec.SshFileOps;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -12,10 +15,9 @@ import org.springframework.stereotype.Component;
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class JschScpUploader {
-  private static final int TIMEOUT_MS = 15_000;
-  private static final int BUFFER_SIZE = 16 * 1024;
-
   private final Session session;
+  @Autowired private SshFileOps fileOps;
+  @Autowired private SshSyncProperties props;
 
   public JschScpUploader(Session session) {
     this.session = session;
@@ -38,9 +40,19 @@ public class JschScpUploader {
   }
 
   public void upload(File localFile, String remoteDir, String remoteFileName) throws Exception {
-    if (!localFile.exists() || !localFile.isFile())
-      throw new FileNotFoundException(localFile.getAbsolutePath());
+    if (!localFile.exists()) throw new FileNotFoundException(localFile.getAbsolutePath());
 
+    if (localFile.isFile()) {
+      uploadSingleFile(localFile, remoteDir, remoteFileName);
+    } else if (localFile.isDirectory()) {
+      uploadDirectory(localFile, remoteDir, remoteFileName);
+    } else {
+      throw new IOException("Unsupported file type: " + localFile.getAbsolutePath());
+    }
+  }
+
+  private void uploadSingleFile(File localFile, String remoteDir, String remoteFileName)
+      throws Exception {
     String cmd = "scp -t " + ShellEscaper.quote(remoteDir);
     ChannelExec channel = (ChannelExec) session.openChannel("exec");
     channel.setCommand(cmd);
@@ -48,7 +60,8 @@ public class JschScpUploader {
     try (OutputStream out = channel.getOutputStream();
         InputStream in = channel.getInputStream();
         FileInputStream fis = new FileInputStream(localFile)) {
-      channel.connect(TIMEOUT_MS);
+
+      channel.connect(props.getTimeoutMs());
       checkAck(in);
 
       String mode = localFile.canExecute() ? "0755" : "0644";
@@ -57,7 +70,7 @@ public class JschScpUploader {
       out.flush();
       checkAck(in);
 
-      byte[] buf = new byte[BUFFER_SIZE];
+      byte[] buf = new byte[props.getScpBufferSize()];
       for (int read; (read = fis.read(buf)) != -1; ) out.write(buf, 0, read);
 
       out.write(0);
@@ -66,6 +79,19 @@ public class JschScpUploader {
     } finally {
       waitForExit(channel);
       channel.disconnect();
+    }
+  }
+
+  private void uploadDirectory(File localFile, String remoteDir, String remoteFileName)
+      throws Exception {
+    String targetDir = remoteDir + "/" + remoteFileName;
+    fileOps.mkDirs(session, targetDir);
+
+    File[] children = localFile.listFiles();
+    if (children == null) return;
+
+    for (File child : children) {
+      upload(child, targetDir, child.getName());
     }
   }
 }

@@ -30,7 +30,7 @@ public class DefaultSshClient implements SshClient, AutoCloseable {
   @Override
   public void uploadFile(File localFile, String remoteFilePath) throws Exception {
     String remoteDir = PathUtils.parent(remoteFilePath);
-    String remoteName = PathUtils.parent(remoteFilePath);
+    String remoteName = PathUtils.name(remoteFilePath);
     fileOps.mkDirs(session, remoteDir);
     scpProv.getObject(session).upload(localFile, remoteDir, remoteName);
   }

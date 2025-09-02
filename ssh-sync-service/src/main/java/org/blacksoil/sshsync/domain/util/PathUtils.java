@@ -10,4 +10,9 @@ public class PathUtils {
     int i = path.lastIndexOf('/');
     return i <= 0 ? "/" : path.substring(0, i);
   }
+
+  public String name(String path) {
+    int lastSlash = path.lastIndexOf('/');
+    return (lastSlash >= 0) ? path.substring(lastSlash + 1) : path;
+  }
 }

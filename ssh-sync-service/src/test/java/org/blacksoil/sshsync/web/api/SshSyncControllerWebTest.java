@@ -88,9 +88,7 @@ class SshSyncControllerWebTest {
   void upload_stream() throws Exception {
     ResponseEntity<?> okSse =
         ResponseEntity.ok().contentType(MediaType.TEXT_EVENT_STREAM).body("sse");
-    doReturn(okSse)
-        .when(sseExec)
-        .run(eq(true), eq("upload"), ArgumentMatchers.any());
+    doReturn(okSse).when(sseExec).run(eq(true), eq("upload"), ArgumentMatchers.any());
 
     String uploadJson =
         """
@@ -117,9 +115,7 @@ class SshSyncControllerWebTest {
   @DisplayName("POST /api/ssh/delete?stream=false -> 202 Accepted")
   void delete_sync() throws Exception {
     ResponseEntity<?> accepted = ResponseEntity.accepted().body(Map.of("ok", true));
-    doReturn(accepted)
-        .when(sseExec)
-        .run(eq(false), eq("delete"), ArgumentMatchers.any());
+    doReturn(accepted).when(sseExec).run(eq(false), eq("delete"), ArgumentMatchers.any());
 
     String body =
         """
@@ -142,9 +138,7 @@ class SshSyncControllerWebTest {
   void delete_stream() throws Exception {
     ResponseEntity<?> okSse =
         ResponseEntity.ok().contentType(MediaType.TEXT_EVENT_STREAM).body("sse");
-    doReturn(okSse)
-        .when(sseExec)
-        .run(eq(true), eq("delete"), ArgumentMatchers.any());
+    doReturn(okSse).when(sseExec).run(eq(true), eq("delete"), ArgumentMatchers.any());
 
     String body =
         """

@@ -12,7 +12,8 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class DefaultSshClientFactory implements SshClientFactory {
-  //TODO: необходимо настроить адекватное азвимодействие этой фабрики с конфигом SshClientConfiguration.
+  // TODO: необходимо настроить адекватное азвимодействие этой фабрики с конфигом
+  // SshClientConfiguration.
 
   private final SshTransportFactory transport;
   private final ConfigurableListableBeanFactory beanFactory;

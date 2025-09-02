@@ -5,14 +5,17 @@ import com.jcraft.jsch.Session;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import lombok.RequiredArgsConstructor;
+import org.blacksoil.sshsync.infra.config.SshSyncProperties;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class SshExec {
-  private static final int DEFAULT_TIMEOUT_MS = 15_000;
+  private final SshSyncProperties properties;
 
   public ExecResult run(Session session, String command) throws Exception {
-    return run(session, command, DEFAULT_TIMEOUT_MS);
+    return run(session, command, properties.getTimeoutMs());
   }
 
   public ExecResult run(Session session, String command, int timeoutMs) throws Exception {

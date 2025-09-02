@@ -54,7 +54,7 @@ public record SshSyncClient(String baseUrl) {
     HttpRequest httpRequest =
         HttpRequest.newBuilder()
             .uri(URI.create(baseUrl + path))
-            .timeout(Duration.ofSeconds(30))
+            .timeout(Duration.ofSeconds(120))
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(body.toString(), StandardCharsets.UTF_8))
             .build();

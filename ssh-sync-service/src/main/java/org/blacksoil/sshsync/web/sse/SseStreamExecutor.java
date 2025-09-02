@@ -20,11 +20,6 @@ public class SseStreamExecutor {
 
   private final AsyncTaskExecutor taskExecutor;
 
-  @FunctionalInterface
-  public interface ProgressOp {
-    void run(Consumer<String> progress) throws Exception;
-  }
-
   public ResponseEntity<?> run(boolean stream, String opName, ProgressOp body) {
     if (stream) {
       SseEmitter emitter = new SseEmitter(0L);
@@ -64,5 +59,10 @@ public class SseStreamExecutor {
       log.error("{} failed (sync)", opName, e);
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
     }
+  }
+
+  @FunctionalInterface
+  public interface ProgressOp {
+    void run(Consumer<String> progress) throws Exception;
   }
 }
