@@ -1,0 +1,53 @@
+<idea-plugin>
+    <id>org.blacksoil.remotesync</id>
+    <name>Remote Sync</name>
+    <version>1.1.4</version>
+
+    <vendor email="emeliangaiday@gmail.com" url="https://github.com/Ozsfag">BlackSoil</vendor>
+
+    <!-- Краткое, однострочное описание -->
+    <description><![CDATA[
+    Upload and sync local Git changes to a remote server over SSH — no SFTP/FTP needed.
+  ]]></description>
+
+    <!-- Расширенные заметки о релизах -->
+    <change-notes><![CDATA[
+  <ul>
+    <li><b>1.1.4</b> – ✨ Added a user-friendly <i>Welcome Page</i> to improve the starting experience</li>
+    <li><b>1.1.3</b> – 🛠️ Several small UX/UI enhancements and performance improvements</li>
+    <li><b>1.1.2</b> – 🚀 CI pipeline optimized for faster and more reliable builds</li>
+    <li><b>1.1.1</b> – 🔧 Upgraded configuration interface and improved SSH error feedback</li>
+  </ul>
+]]></change-notes>
+
+    <!-- Зависимости -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- Расширения -->
+    <extensions defaultExtensionNs="com.intellij">
+
+        <fileEditorProvider
+                implementation="org.blacksoil.remotesync.ui.welcomepage.ui.provider.WelcomeFileEditorProvider"/>
+
+        <!-- Tool Window -->
+        <toolWindow
+                id="Remote Sync"
+                anchor="bottom"
+                factoryClass="org.blacksoil.remotesync.ui.pluginbar.screens.RemoteSyncToolWindow"
+                icon="/icons/icon.svg"/>
+
+        <!-- Сервис хранения состояния -->
+        <projectService
+                serviceInterface="org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings"
+                serviceImplementation="org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings"/>
+
+        <errorHandler implementation="org.blacksoil.remotesync.error.submission.RemoteSyncErrorReportSubmitter"/>
+
+    </extensions>
+
+    <projectListeners>
+        <listener
+                class="org.blacksoil.remotesync.ui.welcomepage.listener.WelcomeProjectListener"
+                topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </projectListeners>
+</idea-plugin>

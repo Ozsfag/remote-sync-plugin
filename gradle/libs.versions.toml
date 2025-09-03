@@ -1,17 +1,23 @@
 [versions]
 jetbrains-intellij-platform = "2.7.2"
-intellij-idea = "2025.2"
+intellij-idea = "2025.2.1"
 lombok = "1.18.32"
 jsch = "0.1.55"
 json = "20250517"
+mapstruct = "1.6.3"
 
 junit = "5.10.2"
 junit4 = "4.13.2"
 mockito = "5.12.0"
 
+spring-boot = "3.5.3"
+spring-dependency-management = "1.1.7"
+
 [libraries]
 jsch = { module = "com.jcraft:jsch", version.ref = "jsch" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
+mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
 
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-junit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
@@ -21,6 +27,11 @@ org-json = { module = "org.json:json", version.ref = "json" }
 junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit4 = { module = "junit:junit", version.ref = "junit4" }
+
+spring-boot-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "spring-boot" }
+
+spring-boot-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
+
 
 [plugins]
 java = { id = "java" }
