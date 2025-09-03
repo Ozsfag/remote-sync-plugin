@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write  # необходимо для создания GitHub Release
+      contents: write
 
     env:
       REMOTE_SYNC_GH_TOKEN: ${{ secrets.REMOTE_SYNC_GH_TOKEN }}
@@ -20,7 +20,6 @@ jobs:
 
       GIT_DIFF_SERVER_PORT: ${{ secrets.GIT_DIFF_SERVER_PORT }}
       GIT_DIFF_SERVER_ADDRESS: ${{ secrets.GIT_DIFF_SERVER_ADDRESS }}
-
       SSH_SYNC_SERVER_PORT: ${{ secrets.SSH_SYNC_SERVER_PORT }}
       SSH_SYNC_SERVER_ADDRESS: ${{ secrets.SSH_SYNC_SERVER_ADDRESS }}
 
@@ -84,9 +83,18 @@ jobs:
       - name: Update plugin.xml <change-notes> with release notes
         run: |
           RELEASE_NOTES="${{ steps.changelog.outputs.release_notes }}"
-          echo "Release notes: $RELEASE_NOTES"
-          
-          sed -i '/<change-notes><![CDATA\[/,/<\/change-notes>/c\<change-notes><![CDATA[\n  '"$RELEASE_NOTES"'\n]]></change-notes>' ui/src/main/resources/META-INF/plugin.xml
+          echo "Release notes:"
+          echo "$RELEASE_NOTES"
+
+          # Преобразуем Markdown -> HTML (очень базово)
+          HTML_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^### \([^ ]*\)/<h3>\1<\/h3>/' | sed 's/^- \(.*\)/<li>\1<\/li>/' | awk 'BEGIN{print "<ul>"} {print} END{print "</ul>"}')
+
+          awk -v notes="$HTML_NOTES" '
+            BEGIN { inside = 0 }
+            /<change-notes><!\[CDATA\[/ { print "<change-notes><![CDATA["; print notes; inside = 1; next }
+            /<\/change-notes>/ { print "]]></change-notes>"; inside = 0; next }
+            inside == 0 { print }
+          ' ui/src/main/resources/META-INF/plugin.xml > plugin.xml.tmp && mv plugin.xml.tmp ui/src/main/resources/META-INF/plugin.xml
 
       - name: Build, Sign & Publish to JetBrains Marketplace
         uses: gradle/gradle-build-action@v2
