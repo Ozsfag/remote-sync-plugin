@@ -11,18 +11,16 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write  # необходимо для создания GitHub Release
 
     env:
       REMOTE_SYNC_GH_TOKEN: ${{ secrets.REMOTE_SYNC_GH_TOKEN }}
       REMOTE_SYNC_REPO_OWNER: ${{ secrets.REMOTE_SYNC_REPO_OWNER }}
       REMOTE_SYNC_REPO_NAME: ${{ secrets.REMOTE_SYNC_REPO_NAME }}
 
-      # --- git-diff-service ---
       GIT_DIFF_SERVER_PORT: ${{ secrets.GIT_DIFF_SERVER_PORT }}
       GIT_DIFF_SERVER_ADDRESS: ${{ secrets.GIT_DIFF_SERVER_ADDRESS }}
 
-      # --- ssh-sync-service ---
       SSH_SYNC_SERVER_PORT: ${{ secrets.SSH_SYNC_SERVER_PORT }}
       SSH_SYNC_SERVER_ADDRESS: ${{ secrets.SSH_SYNC_SERVER_ADDRESS }}
 
@@ -30,7 +28,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Ensure gradlew is executable (safety)
+      - name: Extract release notes from CHANGELOG.md
+        id: changelog
+        uses: ffurrer2/extract-release-notes@v2
+        with:
+          changelog_file: CHANGELOG.md
+
+      - name: Ensure gradlew is executable
         run: chmod +x gradlew
 
       - name: Setup JDK 21
@@ -52,7 +56,6 @@ jobs:
             --stacktrace
 
       - name: Start git-diff-service (background)
-        shell: bash
         run: |
           JAR=$(ls git-diff-service/build/libs/git-diff-service-*.jar | head -n1)
           PORT="${GIT_DIFF_SERVER_PORT}"
@@ -66,7 +69,6 @@ jobs:
           sleep 2
 
       - name: Start ssh-sync-service (background)
-        shell: bash
         run: |
           JAR=$(ls ssh-sync-service/build/libs/ssh-sync-service-*.jar | head -n1)
           PORT="${SSH_SYNC_SERVER_PORT}"
@@ -79,7 +81,14 @@ jobs:
           echo "ssh-sync-service started (pid=$(cat sshsync.pid)) at http://$ADDR:$PORT"
           sleep 2
 
-      - name: Build, Sign & Publish
+      - name: Update plugin.xml <change-notes> with release notes
+        run: |
+          RELEASE_NOTES="${{ steps.changelog.outputs.release_notes }}"
+          echo "Release notes: $RELEASE_NOTES"
+          
+          sed -i '/<change-notes><![CDATA\[/,/<\/change-notes>/c\<change-notes><![CDATA[\n  '"$RELEASE_NOTES"'\n]]></change-notes>' ui/src/main/resources/META-INF/plugin.xml
+
+      - name: Build, Sign & Publish to JetBrains Marketplace
         uses: gradle/gradle-build-action@v2
         with:
           arguments: publishRelease --stacktrace
@@ -91,6 +100,15 @@ jobs:
         with:
           name: remote-sync-plugin
           path: ui/build/distributions/*.zip
+
+      - name: Publish GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --notes "${{ steps.changelog.outputs.release_notes }}" \
+            --verify-tag \
+            --title "Release ${{ github.ref_name }}"
 
       - name: Print services logs
         if: always()
