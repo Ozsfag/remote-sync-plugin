@@ -10,6 +10,10 @@ version = "1.1.6"
 dependencies {
     implementation(project(":shared-dto"))
     implementation(libs.spring.boot.web)
+
+    implementation(libs.spring.boot.actuator)
+    implementation(libs.micrometer.prometheus)
+
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
     testImplementation(libs.spring.boot.test)

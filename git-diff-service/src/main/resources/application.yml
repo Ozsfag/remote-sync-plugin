@@ -1,6 +1,21 @@
 server:
   port: ${GIT_DIFF_SERVER_PORT:8081}
   address: ${GIT_DIFF_SERVER_ADDRESS:127.0.0.1}
+
 spring:
   application:
     name: git-diff-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    enable:
+      all: true
+  prometheus:
+    enabled: true

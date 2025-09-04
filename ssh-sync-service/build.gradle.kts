@@ -12,6 +12,9 @@ dependencies {
     implementation(libs.spring.boot.web)
     implementation(libs.jsch)
 
+    implementation(libs.spring.boot.actuator)
+    implementation(libs.micrometer.prometheus)
+
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
     testImplementation(libs.spring.boot.test)

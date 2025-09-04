@@ -20,3 +20,18 @@ ssh-sync:
   ack-wait-interval-ms: 10
   strict-host-key-checking: false
   preferred-authentications: password,publickey,keyboard-interactive
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    enable:
+      all: true
+  prometheus:
+    enabled: true
+

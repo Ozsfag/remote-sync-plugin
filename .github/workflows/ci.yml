@@ -83,3 +83,21 @@ jobs:
         run: |
           docker build -t ghcr.io/${{ github.repository_owner }}/ssh-sync-service:latest ./ssh-sync-service
           docker push ghcr.io/${{ github.repository_owner }}/ssh-sync-service:latest
+
+      - name: Start monitoring stack (Prometheus + Grafana)
+        run: docker-compose -f docker-compose.yml -f docker-compose.prometheus.yml up -d
+
+      - name: Wait for Grafana to start
+        run: sleep 30
+
+      - name: Render Grafana dashboard to PNG
+        run: |
+          curl -o grafana-dashboard.png \
+            "http://localhost:3000/render/d/cardinality-management/cardinality-management-1-overview?orgId=1&from=now-5m&to=now" \
+            -u admin:admin || echo "Render failed"
+
+      - name: Upload Grafana PNG
+        uses: actions/upload-artifact@v4
+        with:
+          name: grafana-dashboard
+          path: grafana-dashboard.png
