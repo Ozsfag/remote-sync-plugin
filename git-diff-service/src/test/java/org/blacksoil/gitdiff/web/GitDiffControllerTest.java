@@ -27,23 +27,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Import(GitDiffControllerTest.TestAdvice.class)
 class GitDiffControllerTest {
 
+  private static final String PATH = "/api/git/diff";
   @Autowired MockMvc mvc;
-
   @SuppressWarnings("removal")
   @MockBean
   GitDiffService gitDiffService;
-
-  @RestControllerAdvice
-  static class TestAdvice {
-    @ExceptionHandler(IllegalArgumentException.class)
-    public org.springframework.http.ResponseEntity<Map<String, Object>> badReq(
-        IllegalArgumentException ex) {
-      return org.springframework.http.ResponseEntity.badRequest()
-          .body(Map.of("error", ex.getMessage()));
-    }
-  }
-
-  private static final String PATH = "/api/git/diff";
 
   @Test
   @DisplayName("POST /api/git/diff → 200 OK и корректный JSON")
@@ -79,5 +67,15 @@ class GitDiffControllerTest {
     mvc.perform(post(PATH).contentType(MediaType.APPLICATION_JSON).content(reqBody))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.error").value("Not a git repository"));
+  }
+
+  @RestControllerAdvice
+  static class TestAdvice {
+    @ExceptionHandler(IllegalArgumentException.class)
+    public org.springframework.http.ResponseEntity<Map<String, Object>> badReq(
+        IllegalArgumentException ex) {
+      return org.springframework.http.ResponseEntity.badRequest()
+          .body(Map.of("error", ex.getMessage()));
+    }
   }
 }

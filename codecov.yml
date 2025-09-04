@@ -1,0 +1,34 @@
+comment:
+  layout: "condensed_header, condensed_files, condensed_footer"
+  behavior: default
+  require_changes: "coverage_drop OR uncovered_patch"
+  require_head: true
+  require_base: true
+  hide_project_coverage: false
+
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+        informational: false
+    patch:
+      default:
+        target: 90%
+        threshold: 1%
+        informational: false
+
+flags:
+  git-diff-service:
+    paths:
+      - git-diff-service/
+    carryforward: true
+  ssh-sync-service:
+    paths:
+      - ssh-sync-service/
+    carryforward: true
+  ui:
+    paths:
+      - ui/
+    carryforward: true
