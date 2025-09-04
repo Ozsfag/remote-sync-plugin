@@ -7,7 +7,8 @@ import org.blacksoil.remotesync.ui.pluginbar.model.FormData;
 import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
 import org.blacksoil.remotesync.ui.pluginbar.util.Debouncer;
 
-public record RemoteSyncPanelPersistence(Project project, RemoteSyncSettings settings, Debouncer debouncer) {
+public record RemoteSyncPanelPersistence(
+    Project project, RemoteSyncSettings settings, Debouncer debouncer) {
   public RemoteSyncPanelPersistence(Project project, RemoteSyncSettings settings, int debounceMs) {
     this(project, settings, new Debouncer(debounceMs));
   }

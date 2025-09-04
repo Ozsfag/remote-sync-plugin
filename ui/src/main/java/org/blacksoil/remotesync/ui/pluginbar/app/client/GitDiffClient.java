@@ -7,13 +7,22 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import org.blacksoil.remotesync.ui.pluginbar.app.client.factory.HttpClientFactory;
 import org.blacksoil.shareddto.gitdiff.GitDiffRequest;
 import org.blacksoil.shareddto.gitdiff.GitDiffResponse;
-import org.blacksoil.remotesync.ui.pluginbar.app.client.factory.HttpClientFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public record GitDiffClient(String baseUrl) {
+
+  private static List<String> toStringList(JSONArray arr) {
+    List<String> list = new ArrayList<>();
+    if (arr == null) return list;
+    for (int i = 0; i < arr.length(); i++) {
+      list.add(arr.optString(i));
+    }
+    return list;
+  }
 
   public GitDiffResponse getDiff(GitDiffRequest request) throws Exception {
     JSONObject body =
@@ -40,14 +49,5 @@ public record GitDiffClient(String baseUrl) {
     List<String> addedOrModified = toStringList(json.optJSONArray("addedOrModified"));
     List<String> deleted = toStringList(json.optJSONArray("deleted"));
     return new GitDiffResponse(addedOrModified, deleted);
-  }
-
-  private static List<String> toStringList(JSONArray arr) {
-    List<String> list = new ArrayList<>();
-    if (arr == null) return list;
-    for (int i = 0; i < arr.length(); i++) {
-      list.add(arr.optString(i));
-    }
-    return list;
   }
 }

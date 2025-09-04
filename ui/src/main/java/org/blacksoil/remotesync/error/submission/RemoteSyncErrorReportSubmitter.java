@@ -14,6 +14,26 @@ import org.jetbrains.annotations.Nullable;
 
 public class RemoteSyncErrorReportSubmitter extends ErrorReportSubmitter {
 
+  private static boolean isSuccess(
+      @NotNull IdeaLoggingEvent event, @Nullable String additionalInfo, IssueReporter reporter)
+      throws Exception {
+
+    String throwableText = event.getThrowableText();
+    if (throwableText.isBlank()) {
+      throwableText = event.getMessage() != null ? event.getMessage() : "Unknown error";
+    }
+
+    String title = "[RemoteSync] " + throwableText.split("\n")[0];
+    String body =
+        "### Description\n"
+            + (additionalInfo != null ? additionalInfo : "_No user description_\n")
+            + "\n\n### Stacktrace\n```text\n"
+            + throwableText
+            + "\n```";
+
+    return reporter.submitIssue(title, body);
+  }
+
   @NotNull
   @Override
   public String getReportActionText() {
@@ -62,25 +82,5 @@ public class RemoteSyncErrorReportSubmitter extends ErrorReportSubmitter {
         .start();
 
     return true;
-  }
-
-  private static boolean isSuccess(
-      @NotNull IdeaLoggingEvent event, @Nullable String additionalInfo, IssueReporter reporter)
-      throws Exception {
-
-    String throwableText = event.getThrowableText();
-    if (throwableText.isBlank()) {
-      throwableText = event.getMessage() != null ? event.getMessage() : "Unknown error";
-    }
-
-    String title = "[RemoteSync] " + throwableText.split("\n")[0];
-    String body =
-        "### Description\n"
-            + (additionalInfo != null ? additionalInfo : "_No user description_\n")
-            + "\n\n### Stacktrace\n```text\n"
-            + throwableText
-            + "\n```";
-
-    return reporter.submitIssue(title, body);
   }
 }

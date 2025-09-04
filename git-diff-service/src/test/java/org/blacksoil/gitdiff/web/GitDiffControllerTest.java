@@ -29,6 +29,7 @@ class GitDiffControllerTest {
 
   private static final String PATH = "/api/git/diff";
   @Autowired MockMvc mvc;
+
   @SuppressWarnings("removal")
   @MockBean
   GitDiffService gitDiffService;

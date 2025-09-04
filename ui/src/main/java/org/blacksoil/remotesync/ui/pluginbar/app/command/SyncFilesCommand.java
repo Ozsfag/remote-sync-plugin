@@ -2,14 +2,13 @@ package org.blacksoil.remotesync.ui.pluginbar.app.command;
 
 import com.intellij.openapi.project.Project;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.blacksoil.remotesync.ui.pluginbar.app.TaskCallback;
 import org.blacksoil.remotesync.ui.pluginbar.app.service.RemoteSyncService;
-import org.blacksoil.remotesync.ui.pluginbar.presentation.status.StatusReporter;
 import org.blacksoil.remotesync.ui.pluginbar.persistence.RemoteSyncPanelPersistence;
-import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
-import org.blacksoil.remotesync.ui.pluginbar.presentation.view.RemoteSyncView;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.status.StatusReporter;
 import org.blacksoil.remotesync.ui.pluginbar.presentation.validation.FieldsValidator;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.view.RemoteSyncView;
+import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
 
 public final class SyncFilesCommand implements RemoteCommand {
 

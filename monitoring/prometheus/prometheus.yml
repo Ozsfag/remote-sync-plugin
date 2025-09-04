@@ -5,9 +5,9 @@ scrape_configs:
   - job_name: 'git-diff-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['git-diff-service:8080']
+      - targets: [ 'git-diff-service:8080' ]
 
   - job_name: 'ssh-sync-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['ssh-sync-service:8080']
+      - targets: [ 'ssh-sync-service:8080' ]

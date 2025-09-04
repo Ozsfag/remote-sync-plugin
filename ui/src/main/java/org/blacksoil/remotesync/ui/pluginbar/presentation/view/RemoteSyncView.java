@@ -68,13 +68,12 @@ public final class RemoteSyncView {
 
   public @NotNull FormData collectData() {
     return new FormData(
-            usernameField.getText(),
-            ipField.getText(),
-            passwordField.getText(),
-            remotePathField.getText(),
-            branchField.getText(),
-            gitUrlField.getText()
-    );
+        usernameField.getText(),
+        ipField.getText(),
+        passwordField.getText(),
+        remotePathField.getText(),
+        branchField.getText(),
+        gitUrlField.getText());
   }
 
   public void setBusy(boolean busy) {
@@ -128,8 +127,19 @@ public final class RemoteSyncView {
   }
 
   private record SimpleDocListener(Runnable r) implements DocumentListener {
-    @Override public void insertUpdate(DocumentEvent e) { r.run(); }
-    @Override public void removeUpdate(DocumentEvent e) { r.run(); }
-    @Override public void changedUpdate(DocumentEvent e) { r.run(); }
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+      r.run();
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+      r.run();
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+      r.run();
+    }
   }
 }
