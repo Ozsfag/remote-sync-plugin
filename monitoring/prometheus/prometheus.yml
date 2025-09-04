@@ -10,4 +10,4 @@ scrape_configs:
   - job_name: 'ssh-sync-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['ssh-sync-service:8081']
+      - targets: ['ssh-sync-service:8080']

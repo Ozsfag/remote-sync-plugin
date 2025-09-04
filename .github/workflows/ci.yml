@@ -63,6 +63,14 @@ jobs:
       contents: read
       packages: write
 
+    env:
+      GRAFANA_USER: admin
+      GRAFANA_PASS: admin
+      GRAFANA_URL: http://localhost:3000
+      # uid/slug нашего автопровижённого дашборда
+      DASHBOARD_UID: remote-sync
+      DASHBOARD_SLUG: remote-sync-observability
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -84,20 +92,60 @@ jobs:
           docker build -t ghcr.io/${{ github.repository_owner }}/ssh-sync-service:latest ./ssh-sync-service
           docker push ghcr.io/${{ github.repository_owner }}/ssh-sync-service:latest
 
-      - name: Start monitoring stack (Prometheus + Grafana)
-        run: docker-compose -f docker-compose.yml -f docker-compose.prometheus.yml up -d
+      # поднять приложение + мониторинг (Prometheus + Grafana + renderer)
+      - name: Start monitoring stack
+        run: docker compose -f docker-compose.yml -f docker-compose.prometheus.yml up -d
 
-      - name: Wait for Grafana to start
-        run: sleep 30
+      # ждём, пока Grafana поднимется
+      - name: Wait for Grafana to be healthy
+        run: |
+          for i in {1..40}; do
+            if curl -sf "$GRAFANA_URL/api/health" >/dev/null; then
+              echo "Grafana is up"; break
+            fi
+            echo "Waiting Grafana... ($i)"; sleep 3
+          done
 
+      # на случай если автопровижининг отсутствует/сломался — импортируем дашборд через API
+      - name: Import dashboard via Grafana API (fallback)
+        run: |
+          if ! curl -sf "$GRAFANA_URL/api/search?query=$DASHBOARD_UID" -u "$GRAFANA_USER:$GRAFANA_PASS" | grep -q "\"uid\":\"$DASHBOARD_UID\""; then
+            echo "Dashboard $DASHBOARD_UID not found, importing..."
+            # подставляем uid и datasource uid в JSON перед отправкой
+            jq \
+              --arg uid "$DASHBOARD_UID" \
+              --argjson overwrite true \
+              '.dashboard.uid=$uid | .overwrite=$overwrite' \
+              grafana/dashboards/remote-sync-observability.json \
+            | curl -sS -X POST \
+                -H "Content-Type: application/json" \
+                -u "$GRAFANA_USER:$GRAFANA_PASS" \
+                --data-binary @- \
+                "$GRAFANA_URL/api/dashboards/db" \
+            || echo "Dashboard import failed (continuing)"
+            # дать Grafana применить дашборд
+            sleep 5
+          else
+            echo "Dashboard $DASHBOARD_UID already present"
+          fi
+
+      # рендерим PNG
       - name: Render Grafana dashboard to PNG
         run: |
-          curl -o grafana-dashboard.png \
-            "http://localhost:3000/render/d/cardinality-management/cardinality-management-1-overview?orgId=1&from=now-5m&to=now" \
-            -u admin:admin || echo "Render failed"
+          curl -sS -o grafana-dashboard.png \
+            "$GRAFANA_URL/render/d/$DASHBOARD_UID/$DASHBOARD_SLUG?orgId=1&from=now-15m&to=now" \
+            -u "$GRAFANA_USER:$GRAFANA_PASS"
 
       - name: Upload Grafana PNG
         uses: actions/upload-artifact@v4
         with:
           name: grafana-dashboard
           path: grafana-dashboard.png
+
+      # на случай проблем — логируем состояние
+      - name: Dump logs (Prometheus/Grafana)
+        if: failure()
+        run: |
+          docker logs prometheus --tail=200 || true
+          echo "----"
+          docker logs grafana --tail=200 || true

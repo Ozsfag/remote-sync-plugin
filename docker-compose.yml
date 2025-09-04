@@ -3,25 +3,27 @@ version: '3.8'
 services:
   git-diff-service:
     image: ghcr.io/your-org/git-diff-service:latest
+    environment:
+      - SERVER_PORT=8080
     ports:
       - "8081:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
 
   ssh-sync-service:
     image: ghcr.io/your-org/ssh-sync-service:latest
+    environment:
+      - SERVER_PORT=8080
     ports:
       - "8082:8080"
     depends_on:
       git-diff-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
