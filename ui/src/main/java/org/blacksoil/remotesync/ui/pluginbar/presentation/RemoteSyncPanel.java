@@ -5,17 +5,16 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JPanel;
-
-import org.blacksoil.remotesync.ui.pluginbar.persistence.RemoteSyncPanelPersistence;
-import org.blacksoil.remotesync.ui.pluginbar.model.FormData;
-import org.blacksoil.remotesync.ui.pluginbar.presentation.status.StatusReporter;
+import org.blacksoil.remotesync.ui.pluginbar.app.BackgroundTaskRunnerWrapper;
 import org.blacksoil.remotesync.ui.pluginbar.app.command.RemoteCommand;
 import org.blacksoil.remotesync.ui.pluginbar.app.command.SyncFilesCommand;
 import org.blacksoil.remotesync.ui.pluginbar.app.command.TestConnectionCommand;
-import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
-import org.blacksoil.remotesync.ui.pluginbar.app.BackgroundTaskRunnerWrapper;
-import org.blacksoil.remotesync.ui.pluginbar.presentation.view.RemoteSyncView;
+import org.blacksoil.remotesync.ui.pluginbar.model.FormData;
+import org.blacksoil.remotesync.ui.pluginbar.persistence.RemoteSyncPanelPersistence;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.status.StatusReporter;
 import org.blacksoil.remotesync.ui.pluginbar.presentation.validation.FieldsValidator;
+import org.blacksoil.remotesync.ui.pluginbar.presentation.view.RemoteSyncView;
+import org.blacksoil.remotesync.ui.pluginbar.settings.RemoteSyncSettings;
 import org.jetbrains.annotations.NotNull;
 
 public final class RemoteSyncPanel implements Disposable {

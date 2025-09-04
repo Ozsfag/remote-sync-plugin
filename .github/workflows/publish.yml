@@ -1,10 +1,10 @@
-name: Build & Publish to JetBrains Marketplace
+name: Publish Plugin to JetBrains Marketplace
 
 on:
-  workflow_dispatch: {}
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -18,13 +18,8 @@ jobs:
       REMOTE_SYNC_REPO_OWNER: ${{ secrets.REMOTE_SYNC_REPO_OWNER }}
       REMOTE_SYNC_REPO_NAME: ${{ secrets.REMOTE_SYNC_REPO_NAME }}
 
-      GIT_DIFF_SERVER_PORT: ${{ secrets.GIT_DIFF_SERVER_PORT }}
-      GIT_DIFF_SERVER_ADDRESS: ${{ secrets.GIT_DIFF_SERVER_ADDRESS }}
-      SSH_SYNC_SERVER_PORT: ${{ secrets.SSH_SYNC_SERVER_PORT }}
-      SSH_SYNC_SERVER_ADDRESS: ${{ secrets.SSH_SYNC_SERVER_ADDRESS }}
-
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Extract release notes from CHANGELOG.md
@@ -33,60 +28,21 @@ jobs:
         with:
           changelog_file: CHANGELOG.md
 
-      - name: Ensure gradlew is executable
-        run: chmod +x gradlew
-
-      - name: Setup JDK 21
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
           java-version: '21'
-          cache: gradle
+          distribution: 'temurin'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Grant execute permissions
+        run: chmod +x gradlew
 
-      - name: Build services JARs
-        run: |
-          ./gradlew \
-            :shared-dto:build \
-            :git-diff-service:bootJar \
-            :ssh-sync-service:bootJar \
-            --stacktrace
+      - name: Build Plugin for JetBrains Marketplace
+        run: ./gradlew :ui:buildPlugin --stacktrace
 
-      - name: Start git-diff-service (background)
-        run: |
-          JAR=$(ls git-diff-service/build/libs/git-diff-service-*.jar | head -n1)
-          PORT="${GIT_DIFF_SERVER_PORT}"
-          ADDR="${GIT_DIFF_SERVER_ADDRESS}"
-          nohup java -jar "$JAR" \
-            --server.port="$PORT" \
-            --server.address="$ADDR" \
-            > gitdiff.log 2>&1 &
-          echo $! > gitdiff.pid
-          echo "git-diff-service started (pid=$(cat gitdiff.pid)) at http://$ADDR:$PORT"
-          sleep 2
-
-      - name: Start ssh-sync-service (background)
-        run: |
-          JAR=$(ls ssh-sync-service/build/libs/ssh-sync-service-*.jar | head -n1)
-          PORT="${SSH_SYNC_SERVER_PORT}"
-          ADDR="${SSH_SYNC_SERVER_ADDRESS}"
-          nohup java -jar "$JAR" \
-            --server.port="$PORT" \
-            --server.address="$ADDR" \
-            > sshsync.log 2>&1 &
-          echo $! > sshsync.pid
-          echo "ssh-sync-service started (pid=$(cat sshsync.pid)) at http://$ADDR:$PORT"
-          sleep 2
-
-      - name: Update plugin.xml <change-notes> with release notes
+      - name: Patch plugin.xml <change-notes> with release notes
         run: |
           RELEASE_NOTES="${{ steps.changelog.outputs.release_notes }}"
-          echo "Release notes:"
-          echo "$RELEASE_NOTES"
-
-          # Преобразуем Markdown -> HTML (очень базово)
           HTML_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^### \([^ ]*\)/<h3>\1<\/h3>/' | sed 's/^- \(.*\)/<li>\1<\/li>/' | awk 'BEGIN{print "<ul>"} {print} END{print "</ul>"}')
 
           awk -v notes="$HTML_NOTES" '
@@ -94,12 +50,10 @@ jobs:
             /<change-notes><!\[CDATA\[/ { print "<change-notes><![CDATA["; print notes; inside = 1; next }
             /<\/change-notes>/ { print "]]></change-notes>"; inside = 0; next }
             inside == 0 { print }
-          ' ui/src/main/resources/META-INF/plugin.xml > plugin.xml.tmp && mv plugin.xml.tmp ui/src/main/resources/META-INF/plugin.xml
+          ' ui/src/main/resources/META-INF/plugin.xml > tmp && mv tmp ui/src/main/resources/META-INF/plugin.xml
 
-      - name: Build, Sign & Publish to JetBrains Marketplace
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: publishRelease --stacktrace
+      - name: Publish Plugin
+        run: ./gradlew :ui:publishPlugin --stacktrace
         env:
           JB_PUBLISH_TOKEN: ${{ secrets.JB_PUBLISH_TOKEN }}
 
@@ -117,22 +71,3 @@ jobs:
             --notes "${{ steps.changelog.outputs.release_notes }}" \
             --verify-tag \
             --title "Release ${{ github.ref_name }}"
-
-      - name: Print services logs
-        if: always()
-        run: |
-          echo "==== git-diff-service last logs ===="
-          tail -n 200 gitdiff.log || true
-          echo
-          echo "==== ssh-sync-service last logs ===="
-          tail -n 200 sshsync.log || true
-
-      - name: Stop services
-        if: always()
-        run: |
-          for f in gitdiff.pid sshsync.pid; do
-            if [ -f "$f" ]; then
-              kill "$(cat "$f")" || true
-              sleep 2
-            fi
-          done

@@ -1,0 +1,151 @@
+name: CI & Docker Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle
+
+      - name: Grant execute permissions for gradlew
+        run: chmod +x gradlew
+
+      - name: Run unit tests with code coverage
+        run: ./gradlew test jacocoTestReport --no-daemon
+
+      - name: Upload code coverage HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: '**/build/reports/jacoco/test/html'
+
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-reports
+          path: '**/build/reports/tests/test'
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: '**/build/reports/jacoco/test/jacocoTestReport.xml'
+          fail_ci_if_error: true
+
+  docker-build-and-push:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      GRAFANA_USER: admin
+      GRAFANA_PASS: admin
+      GRAFANA_URL: http://localhost:3000
+      # uid/slug нашего автопровижённого дашборда
+      DASHBOARD_UID: remote-sync
+      DASHBOARD_SLUG: remote-sync-observability
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push git-diff-service
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/git-diff-service:latest ./git-diff-service
+          docker push ghcr.io/${{ github.repository_owner }}/git-diff-service:latest
+
+      - name: Build and Push ssh-sync-service
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/ssh-sync-service:latest ./ssh-sync-service
+          docker push ghcr.io/${{ github.repository_owner }}/ssh-sync-service:latest
+
+      # поднять приложение + мониторинг (Prometheus + Grafana + renderer)
+      - name: Start monitoring stack
+        run: docker compose -f docker-compose.yml -f docker-compose.prometheus.yml up -d
+
+      # ждём, пока Grafana поднимется
+      - name: Wait for Grafana to be healthy
+        run: |
+          for i in {1..40}; do
+            if curl -sf "$GRAFANA_URL/api/health" >/dev/null; then
+              echo "Grafana is up"; break
+            fi
+            echo "Waiting Grafana... ($i)"; sleep 3
+          done
+
+      # на случай если автопровижининг отсутствует/сломался — импортируем дашборд через API
+      - name: Import dashboard via Grafana API (fallback)
+        run: |
+          if ! curl -sf "$GRAFANA_URL/api/search?query=$DASHBOARD_UID" -u "$GRAFANA_USER:$GRAFANA_PASS" | grep -q "\"uid\":\"$DASHBOARD_UID\""; then
+            echo "Dashboard $DASHBOARD_UID not found, importing..."
+            # подставляем uid и datasource uid в JSON перед отправкой
+            jq \
+              --arg uid "$DASHBOARD_UID" \
+              --argjson overwrite true \
+              '.dashboard.uid=$uid | .overwrite=$overwrite' \
+              grafana/dashboards/remote-sync-observability.json \
+            | curl -sS -X POST \
+                -H "Content-Type: application/json" \
+                -u "$GRAFANA_USER:$GRAFANA_PASS" \
+                --data-binary @- \
+                "$GRAFANA_URL/api/dashboards/db" \
+            || echo "Dashboard import failed (continuing)"
+            # дать Grafana применить дашборд
+            sleep 5
+          else
+            echo "Dashboard $DASHBOARD_UID already present"
+          fi
+
+      # рендерим PNG
+      - name: Render Grafana dashboard to PNG
+        run: |
+          curl -sS -o grafana-dashboard.png \
+            "$GRAFANA_URL/render/d/$DASHBOARD_UID/$DASHBOARD_SLUG?orgId=1&from=now-15m&to=now" \
+            -u "$GRAFANA_USER:$GRAFANA_PASS"
+
+      - name: Upload Grafana PNG
+        uses: actions/upload-artifact@v4
+        with:
+          name: grafana-dashboard
+          path: grafana-dashboard.png
+
+      # на случай проблем — логируем состояние
+      - name: Dump logs (Prometheus/Grafana)
+        if: failure()
+        run: |
+          docker logs prometheus --tail=200 || true
+          echo "----"
+          docker logs grafana --tail=200 || true
