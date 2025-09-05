@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      default-filters:
+        - AddRequestHeader=X-Gateway, API-Gateway
+      discovery:
+        locator:
+          enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    enable:
+      all: true
+  prometheus:
+    enabled: true
+
+jwt:
+  secret: ${JWT_SECRET}
