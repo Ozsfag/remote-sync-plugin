@@ -12,6 +12,20 @@ spring:
       discovery:
         locator:
           enabled: false
+      routes:
+        - id: git-diff-service
+          uri: http://git-diff-service:8080
+          predicates:
+            - Path=/diff/**
+          filters:
+            - StripPrefix=1
+
+        - id: ssh-sync-service
+          uri: http://ssh-sync-service:8080
+          predicates:
+            - Path=/sync/**
+          filters:
+            - StripPrefix=1
 
 management:
   endpoints:
