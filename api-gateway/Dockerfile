@@ -1,17 +1,12 @@
-FROM eclipse-temurin:21-jdk as builder
+FROM eclipse-temurin:21-jdk-alpine as builder
 WORKDIR /app
 
-# Копируем весь проект (или api-gateway + build-скрипты)
 COPY . /app
-
-# Собираем только модуль api-gateway
 RUN ./gradlew :api-gateway:bootJar --no-daemon
 
-# Финальный образ на jre
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-
-# Копируем собранный jar-файл
+RUN apk add --no-cache curl
 COPY --from=builder /app/api-gateway/build/libs/api-gateway-*.jar app.jar
 
 EXPOSE 8080
