@@ -13,19 +13,33 @@ spring:
         locator:
           enabled: false
       routes:
-        - id: git-diff-service
+        # --- git-diff-service: ACTUATOR через gateway ---
+        - id: git-diff-actuator
           uri: http://git-diff-service:8080
           predicates:
-            - Path=/diff/**
+            - Path=/api/git/actuator/**
           filters:
-            - StripPrefix=1
+            - RewritePath=/api/git/actuator/(?<segment>.*), /actuator/${segment}
 
-        - id: ssh-sync-service
+        # --- ssh-sync-service: ACTUATOR через gateway ---
+        - id: ssh-sync-actuator
           uri: http://ssh-sync-service:8080
           predicates:
-            - Path=/sync/**
+            - Path=/api/ssh/actuator/**
           filters:
-            - StripPrefix=1
+            - RewritePath=/api/ssh/actuator/(?<segment>.*), /actuator/${segment}
+
+        # --- git-diff-service: Бизнес-API без StripPrefix ---
+        - id: git-diff-api
+          uri: http://git-diff-service:8080
+          predicates:
+            - Path=/api/git/**
+
+        # --- ssh-sync-service: Бизнес-API без StripPrefix ---
+        - id: ssh-sync-api
+          uri: http://ssh-sync-service:8080
+          predicates:
+            - Path=/api/ssh/**
 
 management:
   endpoints:
@@ -47,5 +61,5 @@ jwt:
 security:
   permitted-paths:
     - /actuator/**
-    - /git/actuator/**
-    - /ssh/actuator/**
+    - /api/git/actuator/**
+    - /api/ssh/actuator/**
