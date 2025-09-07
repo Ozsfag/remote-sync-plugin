@@ -7,39 +7,41 @@ spring:
 
   cloud:
     gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false
+          routes:
+            # --- actuator git-diff: /api/git/actuator/** -> /actuator/**
+            - id: git-diff-actuator
+              uri: http://git-diff-service:8080
+              predicates:
+                - Path=/api/git/actuator/**
+              filters:
+                - RewritePath=/api/git/actuator/(?<segment>.*), /actuator/${segment}
+
+            # --- actuator ssh-sync: /api/ssh/actuator/** -> /actuator/**
+            - id: ssh-sync-actuator
+              uri: http://ssh-sync-service:8080
+              predicates:
+                - Path=/api/ssh/actuator/**
+              filters:
+                - RewritePath=/api/ssh/actuator/(?<segment>.*), /actuator/${segment}
+
+            # --- бизнес-API без переписывания путей
+            - id: git-diff-api
+              uri: http://git-diff-service:8080
+              predicates:
+                - Path=/api/git/**
+
+            - id: ssh-sync-api
+              uri: http://ssh-sync-service:8080
+              predicates:
+                - Path=/api/ssh/**
+      # default-filters можно оставить как есть
       default-filters:
         - AddRequestHeader=X-Gateway, API-Gateway
-      discovery:
-        locator:
-          enabled: false
-      routes:
-        # --- actuator git-diff через gateway: /api/git/actuator/** -> /actuator/**
-        - id: git-diff-actuator
-          uri: http://git-diff-service:8080
-          predicates:
-            - Path=/api/git/actuator/**
-          filters:
-            - StripPrefix=3
-
-        # --- actuator ssh-sync через gateway: /api/ssh/actuator/** -> /actuator/**
-        - id: ssh-sync-actuator
-          uri: http://ssh-sync-service:8080
-          predicates:
-            - Path=/api/ssh/actuator/**
-          filters:
-            - StripPrefix=3
-
-        # --- бизнес-API git-diff без переписывания путей
-        - id: git-diff-api
-          uri: http://git-diff-service:8080
-          predicates:
-            - Path=/api/git/**
-
-        # --- бизнес-API ssh-sync без переписывания путей
-        - id: ssh-sync-api
-          uri: http://ssh-sync-service:8080
-          predicates:
-            - Path=/api/ssh/**
 
 management:
   endpoints:
