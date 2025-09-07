@@ -22,6 +22,9 @@ dependencies {
     implementation(libs.spring.boot.actuator)
     implementation(libs.micrometer.prometheus)
 
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+
     // Тесты
     testImplementation(libs.spring.boot.test)
     testImplementation(libs.reactor.test)
