@@ -40,7 +40,7 @@ services:
     image: ghcr.io/ozsfag/api-gateway:latest
     build:
       context: .
-    dockerfile: api-gateway/Dockerfile
+      dockerfile: api-gateway/Dockerfile
     environment:
       - JWT_SECRET=${JWT_SECRET}
     ports:
