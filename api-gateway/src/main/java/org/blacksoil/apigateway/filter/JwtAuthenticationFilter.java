@@ -30,24 +30,15 @@ public class JwtAuthenticationFilter implements WebFilter {
 
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-    var request = exchange.getRequest();
+    var req = exchange.getRequest();
 
-    if (request.getMethod() == HttpMethod.OPTIONS) {
+    if (req.getMethod() == HttpMethod.OPTIONS) return chain.filter(exchange);
+    if (isPermitted(req.getPath().value())) return chain.filter(exchange);
+
+    String h = req.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+    if (h != null && h.startsWith("Bearer ") && jwtUtils.validateToken(h.substring(7))) {
       return chain.filter(exchange);
     }
-
-    if (isPermitted(request.getPath().value())) {
-      return chain.filter(exchange);
-    }
-
-    String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-      String token = authHeader.substring(7);
-      if (jwtUtils.validateToken(token)) {
-        return chain.filter(exchange);
-      }
-    }
-
     exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
     return exchange.getResponse().setComplete();
   }
