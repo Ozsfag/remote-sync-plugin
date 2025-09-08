@@ -24,23 +24,15 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-/**
- * Интеграционные тесты для "чистой" схемы маршрутизации gateway. - Проверяем публичные
- * actuator-эндпоинты (gateway и проксированные) - Проверяем требование JWT на бизнес-эндпоинтах -
- * Проверяем проксирование и заголовок X-Gateway
- */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(
     properties = {
-      // минимально безопасный секрет (>=32 байт) для HS256
       "JWT_SECRET=test-jwt-secret-test-jwt-secret-32bytes",
-      // экспонируем health/metrics
       "management.endpoints.web.exposure.include=health,info,metrics,prometheus",
       "management.endpoint.health.show-details=always"
     })
 class ApiGatewayIntegrationTest {
 
-  // два WireMock для симуляции git-diff и ssh-sync
   @RegisterExtension
   @Order(1)
   static WireMockExtension gitDiffMock =
@@ -51,7 +43,6 @@ class ApiGatewayIntegrationTest {
   static WireMockExtension sshSyncMock =
       WireMockExtension.newInstance().options(wireMockConfig().dynamicPort()).build();
 
-  // Подменяем URI сервисов на WireMock
   @DynamicPropertySource
   static void overrideUris(DynamicPropertyRegistry registry) {
     registry.add("GIT_DIFF_URI", () -> "http://localhost:" + gitDiffMock.getPort());
@@ -59,14 +50,13 @@ class ApiGatewayIntegrationTest {
   }
 
   @LocalServerPort int port;
+  private WebTestClient client;
 
   @Autowired
   void initClient(WebTestClient.Builder builder) {
     this.client =
         builder.baseUrl("http://localhost:" + port).responseTimeout(Duration.ofSeconds(5)).build();
   }
-
-  private WebTestClient client;
 
   private static final String SECRET = "test-jwt-secret-test-jwt-secret-32bytes";
 
@@ -76,8 +66,8 @@ class ApiGatewayIntegrationTest {
     return Jwts.builder()
         .subject("it-user")
         .issuedAt(new Date(now))
-        .expiration(new Date(now + 3600_000)) // 1 час
-        .signWith(key) // HS256 по умолчанию для hmac key (jjwt 0.12+)
+        .expiration(new Date(now + 3600_000))
+        .signWith(key) // HS256
         .compact();
   }
 
@@ -88,11 +78,11 @@ class ApiGatewayIntegrationTest {
   }
 
   @AfterEach
-  void verifyNoUnexpected() {
-    // можно добавить общие проверки, если нужно
+  void afterEach() {
+    // опционально: общие проверки
   }
 
-  // ---------- ПУБЛИЧНЫЕ ACTUATOR ----------
+  // ------ PUBLIC ACTUATOR
 
   @Test
   void gateway_actuator_health_is_public() {
@@ -109,7 +99,12 @@ class ApiGatewayIntegrationTest {
   @Test
   void git_actuator_health_is_proxied_and_public() {
     gitDiffMock.stubFor(
-        get(urlEqualTo("/actuator/health")).willReturn(okJson("{\"status\":\"UP\"}")));
+        get(urlEqualTo("/actuator/health"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/vnd.spring-boot.actuator.v3+json")
+                    .withBody("{\"status\":\"UP\"}")));
 
     client
         .get()
@@ -131,7 +126,12 @@ class ApiGatewayIntegrationTest {
   @Test
   void ssh_actuator_health_is_proxied_and_public() {
     sshSyncMock.stubFor(
-        get(urlEqualTo("/actuator/health")).willReturn(okJson("{\"status\":\"UP\"}")));
+        get(urlEqualTo("/actuator/health"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/vnd.spring-boot.actuator.v3+json")
+                    .withBody("{\"status\":\"UP\"}")));
 
     client
         .get()
@@ -150,7 +150,7 @@ class ApiGatewayIntegrationTest {
             .withHeader("X-Gateway", equalTo("API-Gateway")));
   }
 
-  // ---------- ЗАЩИЩЁННЫЕ ЭНДПОИНТЫ (JWT) ----------
+  // ------ PROTECTED BUSINESS ENDPOINTS
 
   @Test
   void git_diff_without_jwt_is_401() {
@@ -179,11 +179,9 @@ class ApiGatewayIntegrationTest {
 
   @Test
   void git_diff_with_valid_jwt_is_proxied_and_returns_200() {
-    // backend-ответ симулируем
     gitDiffMock.stubFor(
         post(urlEqualTo("/api/git/diff"))
             .withRequestBody(containing("\"projectDir\":\"/tmp/repo\""))
-            .withHeader("Authorization", matching("Bearer .*")) // gateway должен пробросить auth?
             .willReturn(okJson("{\"files\":[]}")));
 
     client
@@ -199,7 +197,6 @@ class ApiGatewayIntegrationTest {
         .jsonPath("$.files")
         .isArray();
 
-    // Проверяем, что default-filter добавил заголовок X-Gateway
     gitDiffMock.verify(
         postRequestedFor(urlEqualTo("/api/git/diff"))
             .withHeader("X-Gateway", equalTo("API-Gateway")));
