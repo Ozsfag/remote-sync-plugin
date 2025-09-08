@@ -13,7 +13,6 @@ spring:
             locator:
               enabled: false
           routes:
-            # --- actuator git-diff: /api/git/actuator/** -> /actuator/**
             - id: git-diff-actuator
               uri: http://git-diff-service:8080
               predicates:
@@ -21,7 +20,6 @@ spring:
               filters:
                 - RewritePath=/api/git/actuator/(?<segment>.*), /actuator/${segment}
 
-            # --- actuator ssh-sync: /api/ssh/actuator/** -> /actuator/**
             - id: ssh-sync-actuator
               uri: http://ssh-sync-service:8080
               predicates:
@@ -29,7 +27,6 @@ spring:
               filters:
                 - RewritePath=/api/ssh/actuator/(?<segment>.*), /actuator/${segment}
 
-            # --- бизнес-API без переписывания путей
             - id: git-diff-api
               uri: http://git-diff-service:8080
               predicates:
@@ -39,7 +36,6 @@ spring:
               uri: http://ssh-sync-service:8080
               predicates:
                 - Path=/api/ssh/**
-      # default-filters можно оставить как есть
       default-filters:
         - AddRequestHeader=X-Gateway, API-Gateway
 
