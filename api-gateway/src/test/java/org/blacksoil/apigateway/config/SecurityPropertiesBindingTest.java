@@ -18,7 +18,7 @@ class SecurityPropertiesBindingTest {
 
   @Test
   void permittedPathsBoundFromYaml() {
-    List<String> p = props.permittedPaths();
+    List<String> p = props.getPermittedPaths();
     assertThat(p).isNotEmpty();
     assertThat(p).anyMatch(s -> s.startsWith("/actuator/"));
   }
