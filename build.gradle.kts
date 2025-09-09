@@ -5,7 +5,7 @@ plugins {
 
 allprojects {
     group = "org.blacksoil"
-    version = "1.1.7"
+    version = "1.1.6"
 
     repositories {
         mavenCentral()
