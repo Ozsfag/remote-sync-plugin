@@ -1,20 +1,26 @@
-version: '3.8'
-
 services:
   git-diff-service:
-    image: ghcr.io/Ozsfag/git-diff-service:latest
+    image: ghcr.io/ozsfag/git-diff-service:latest
+    build:
+      context: .                    # корень репо (нужно для локального build fallback)
+      dockerfile: git-diff-service/Dockerfile
     environment:
       - SERVER_PORT=8080
     ports:
       - "8081:8080"
+    pull_policy: if_not_present
     healthcheck:
       test: [ "CMD", "curl", "-fsS", "http://localhost:8080/actuator/health" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks: [monitoring]
 
   ssh-sync-service:
-    image: ghcr.io/Ozsfag/ssh-sync-service:latest
+    image: ghcr.io/ozsfag/ssh-sync-service:latest
+    build:
+      context: .
+      dockerfile: ssh-sync-service/Dockerfile
     environment:
       - SERVER_PORT=8080
     ports:
@@ -22,8 +28,35 @@ services:
     depends_on:
       git-diff-service:
         condition: service_healthy
+    pull_policy: if_not_present
     healthcheck:
       test: [ "CMD", "curl", "-fsS", "http://localhost:8080/actuator/health" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks: [monitoring]
+
+  api-gateway:
+    image: ghcr.io/ozsfag/api-gateway:latest
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - "8083:8080"
+    depends_on:
+      git-diff-service:
+        condition: service_healthy
+      ssh-sync-service:
+        condition: service_healthy
+    pull_policy: if_not_present
+    healthcheck:
+      test: [ "CMD", "curl", "-fsS", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [monitoring]
+
+networks:
+  monitoring:

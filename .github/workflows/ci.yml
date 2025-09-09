@@ -58,7 +58,6 @@ jobs:
   docker-build-and-push:
     runs-on: ubuntu-latest
     needs: build-and-test
-
     permissions:
       contents: read
       packages: write
@@ -67,9 +66,9 @@ jobs:
       GRAFANA_USER: admin
       GRAFANA_PASS: admin
       GRAFANA_URL: http://localhost:3000
-      # uid/slug нашего автопровижённого дашборда
       DASHBOARD_UID: remote-sync
       DASHBOARD_SLUG: remote-sync-observability
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
     steps:
       - name: Checkout code
@@ -82,36 +81,89 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push git-diff-service
-        run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/git-diff-service:latest ./git-diff-service
-          docker push ghcr.io/${{ github.repository_owner }}/git-diff-service:latest
+      - name: Normalize owner to lowercase
+        run: echo "OWNER_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      - name: Build and Push ssh-sync-service
+      # ===== Build images (всегда, и на PR тоже) =====
+      - name: Build git-diff-service image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/ssh-sync-service:latest ./ssh-sync-service
-          docker push ghcr.io/${{ github.repository_owner }}/ssh-sync-service:latest
+          docker build -f git-diff-service/Dockerfile \
+            --label "org.opencontainers.image.source=${{ github.repository }}" \
+            -t ghcr.io/${{ env.OWNER_LC }}/git-diff-service:latest .
 
-      # поднять приложение + мониторинг (Prometheus + Grafana + renderer)
+      - name: Build ssh-sync-service image
+        run: |
+          docker build -f ssh-sync-service/Dockerfile \
+            --label "org.opencontainers.image.source=${{ github.repository }}" \
+            -t ghcr.io/${{ env.OWNER_LC }}/ssh-sync-service:latest .
+
+      - name: Build api-gateway image
+        run: |
+          docker build -f api-gateway/Dockerfile \
+            --label "org.opencontainers.image.source=${{ github.repository }}" \
+            -t ghcr.io/${{ env.OWNER_LC }}/api-gateway:latest .
+
+      # ===== Push + compose только на push в main =====
+      - name: Push images to GHCR
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
+        run: |
+          docker push ghcr.io/${{ env.OWNER_LC }}/git-diff-service:latest
+          docker push ghcr.io/${{ env.OWNER_LC }}/ssh-sync-service:latest
+          docker push ghcr.io/${{ env.OWNER_LC }}/api-gateway:latest
+
+      - name: Write .env file for Docker Compose
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
+        run: echo "JWT_SECRET=$JWT_SECRET" > .env
+
       - name: Start monitoring stack
-        run: docker compose -f docker-compose.yml -f docker-compose.prometheus.yml up -d
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
+        run: docker compose --env-file .env -f docker-compose.yml -f docker-compose.prometheus.yml up -d
 
-      # ждём, пока Grafana поднимется
+      - name: Wait for git-diff-service to be healthy
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:8081/actuator/health >/dev/null; then
+              echo "git-diff-service is healthy"; break
+            fi
+            echo "Waiting for git-diff-service... ($i)"; sleep 3
+          done
+
+      - name: Wait for ssh-sync-service to be healthy
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:8082/actuator/health >/dev/null; then
+              echo "ssh-sync-service is healthy"; break
+            fi
+            echo "Waiting for ssh-sync-service... ($i)"; sleep 3
+          done
+
+      - name: Wait for api-gateway to be healthy
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:8083/actuator/health >/dev/null; then
+              echo "api-gateway is healthy"; break
+            fi
+            echo "Waiting for api-gateway... ($i)"; sleep 3
+          done
+
       - name: Wait for Grafana to be healthy
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         run: |
           for i in {1..40}; do
             if curl -sf "$GRAFANA_URL/api/health" >/dev/null; then
-              echo "Grafana is up"; break
+              echo "Grafana is healthy"; break
             fi
-            echo "Waiting Grafana... ($i)"; sleep 3
+            echo "Waiting for Grafana... ($i)"; sleep 3
           done
 
-      # на случай если автопровижининг отсутствует/сломался — импортируем дашборд через API
       - name: Import dashboard via Grafana API (fallback)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         run: |
           if ! curl -sf "$GRAFANA_URL/api/search?query=$DASHBOARD_UID" -u "$GRAFANA_USER:$GRAFANA_PASS" | grep -q "\"uid\":\"$DASHBOARD_UID\""; then
             echo "Dashboard $DASHBOARD_UID not found, importing..."
-            # подставляем uid и datasource uid в JSON перед отправкой
             jq \
               --arg uid "$DASHBOARD_UID" \
               --argjson overwrite true \
@@ -123,26 +175,25 @@ jobs:
                 --data-binary @- \
                 "$GRAFANA_URL/api/dashboards/db" \
             || echo "Dashboard import failed (continuing)"
-            # дать Grafana применить дашборд
             sleep 5
           else
             echo "Dashboard $DASHBOARD_UID already present"
           fi
 
-      # рендерим PNG
       - name: Render Grafana dashboard to PNG
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         run: |
           curl -sS -o grafana-dashboard.png \
             "$GRAFANA_URL/render/d/$DASHBOARD_UID/$DASHBOARD_SLUG?orgId=1&from=now-15m&to=now" \
             -u "$GRAFANA_USER:$GRAFANA_PASS"
 
       - name: Upload Grafana PNG
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         uses: actions/upload-artifact@v4
         with:
           name: grafana-dashboard
           path: grafana-dashboard.png
 
-      # на случай проблем — логируем состояние
       - name: Dump logs (Prometheus/Grafana)
         if: failure()
         run: |

@@ -32,3 +32,7 @@ flags:
     paths:
       - ui/
     carryforward: true
+  api-gateway:
+    paths:
+      - api-gateway/
+    carryforward: true

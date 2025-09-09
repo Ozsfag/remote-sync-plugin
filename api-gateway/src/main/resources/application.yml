@@ -1,0 +1,70 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false
+          routes:
+            # --- actuator git-diff: /api/git/actuator/** -> /actuator/**
+            - id: git-diff-actuator
+              uri: ${GIT_DIFF_URI:http://git-diff-service:8080}
+              predicates:
+                - Path=/api/git/actuator/**
+              filters:
+                - RewritePath=/api/git/actuator/(?<segment>.*),/actuator/${segment}
+                - AddRequestHeader=X-Gateway, API-Gateway
+
+            # --- actuator ssh-sync: /api/ssh/actuator/** -> /actuator/**
+            - id: ssh-sync-actuator
+              uri: ${SSH_SYNC_URI:http://ssh-sync-service:8080}
+              predicates:
+                - Path=/api/ssh/actuator/**
+              filters:
+                - RewritePath=/api/ssh/actuator/(?<segment>.*),/actuator/${segment}
+                - AddRequestHeader=X-Gateway, API-Gateway
+
+            # --- бизнес-API (без переписывания пути)
+            - id: git-diff-api
+              uri: ${GIT_DIFF_URI:http://git-diff-service:8080}
+              predicates:
+                - Path=/api/git/**
+              filters:
+                - AddRequestHeader=X-Gateway, API-Gateway
+
+            - id: ssh-sync-api
+              uri: ${SSH_SYNC_URI:http://ssh-sync-service:8080}
+              predicates:
+                - Path=/api/ssh/**
+              filters:
+                - AddRequestHeader=X-Gateway, API-Gateway
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    enable:
+      all: true
+  prometheus:
+    enabled: true
+
+jwt:
+  secret: ${JWT_SECRET}
+
+security:
+  permitted-paths:
+    - /actuator/**
+    - /api/git/actuator/**
+    - /api/ssh/actuator/**

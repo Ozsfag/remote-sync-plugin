@@ -11,3 +11,8 @@ scrape_configs:
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: [ 'ssh-sync-service:8080' ]
+
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'api-gateway:8080' ]

@@ -12,20 +12,22 @@ class GitDiffServiceTest {
 
   @Test
   void testValidDiffResult() {
+    GitCommandExecutor mockExecutor = mock(GitCommandExecutor.class);
 
-    GitDiffService service = mock(GitDiffService.class);
-    GitCommandExecutor executor = mock(GitCommandExecutor.class);
+    // Эмулируем вывод git (A/M/D + путь к файлу)
+    when(mockExecutor.runGitCommand(anyString(), any(String[].class)))
+        .thenReturn(List.of("A src/NewFile.java", "M src/Changed.java", "D src/Removed.java"));
 
-    when(executor.runGitCommand(any(), eq("diff"), eq("--name-status"), eq("origin/main")))
-        .thenReturn(List.of("A\tfile1.java", "M\tfile2.java", "D\tdeleted1.java"));
+    GitDiffService service = new GitDiffService(mockExecutor);
 
-    GitDiffResponse result = service.getChangedFiles("/project", "main");
+    GitDiffResponse result = service.getChangedFiles("C:/repo", "main");
 
-    assertEquals(2, result.addedOrModified().size(), "Expected 2 added/modified files");
-    assertEquals(1, result.deleted().size(), "Expected 1 deleted file");
-    assertTrue(result.addedOrModified().contains("file1.java"));
-    assertTrue(result.addedOrModified().contains("file2.java"));
-    assertTrue(result.deleted().contains("deleted1.java"));
+    assertNotNull(result);
+    assertIterableEquals(List.of("src/NewFile.java", "src/Changed.java"), result.addedOrModified());
+    assertIterableEquals(List.of("src/Removed.java"), result.deleted());
+
+    // Если в тесте используется другой путь — поменяй "C:/repo" ниже или замени на anyString()
+    verify(mockExecutor).runGitCommand(eq("C:/repo"), any(String[].class));
   }
 
   @Test
