@@ -15,7 +15,7 @@ spring:
           routes:
             # --- actuator git-diff: /api/git/actuator/** -> /actuator/**
             - id: git-diff-actuator
-            - uri: ${GIT_DIFF_URI:http://git-diff-service:8080}
+              uri: ${GIT_DIFF_URI:http://git-diff-service:8080}
               predicates:
                 - Path=/api/git/actuator/**
               filters:
@@ -23,7 +23,7 @@ spring:
 
             # --- actuator ssh-sync: /api/ssh/actuator/** -> /actuator/**
             - id: ssh-sync-actuator
-            - uri: ${SSH_SYNC_URI:http://ssh-sync-service:8080}
+              uri: ${SSH_SYNC_URI:http://ssh-sync-service:8080}
               predicates:
                 - Path=/api/ssh/actuator/**
               filters:
@@ -31,12 +31,12 @@ spring:
 
             # --- бизнес-API (без переписывания пути)
             - id: git-diff-api
-            - uri: ${GIT_DIFF_URI:http://git-diff-service:8080}
+              uri: ${GIT_DIFF_URI:http://git-diff-service:8080}
               predicates:
                 - Path=/api/git/**
 
             - id: ssh-sync-api
-            - uri: ${SSH_SYNC_URI:http://ssh-sync-service:8080}
+              uri: ${SSH_SYNC_URI:http://ssh-sync-service:8080}
               predicates:
                 - Path=/api/ssh/**
 
