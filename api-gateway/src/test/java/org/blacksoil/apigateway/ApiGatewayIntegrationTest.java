@@ -15,7 +15,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
@@ -52,10 +51,13 @@ class ApiGatewayIntegrationTest {
   @LocalServerPort int port;
   private WebTestClient client;
 
-  @Autowired
-  void initClient(WebTestClient.Builder builder) {
+  @BeforeEach
+  void initClient() {
     this.client =
-        builder.baseUrl("http://localhost:" + port).responseTimeout(Duration.ofSeconds(5)).build();
+        WebTestClient.bindToServer()
+            .baseUrl("http://localhost:" + port)
+            .responseTimeout(Duration.ofSeconds(5))
+            .build();
   }
 
   private static final String SECRET = "test-jwt-secret-test-jwt-secret-32bytes";
