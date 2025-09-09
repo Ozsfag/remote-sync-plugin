@@ -82,20 +82,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Normalize owner to lowercase
+        run: echo "OWNER_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+
       - name: Build and Push git-diff-service
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/git-diff-service:latest ./git-diff-service
-          docker push ghcr.io/${{ github.repository_owner }}/git-diff-service:latest
+          docker build -t ghcr.io/${{ env.OWNER_LC }}/git-diff-service:latest ./git-diff-service
+          docker push ghcr.io/${{ env.OWNER_LC }}/git-diff-service:latest
 
       - name: Build and Push ssh-sync-service
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/ssh-sync-service:latest ./ssh-sync-service
-          docker push ghcr.io/${{ github.repository_owner }}/ssh-sync-service:latest
+          docker build -t ghcr.io/${{ env.OWNER_LC }}/ssh-sync-service:latest ./ssh-sync-service
+          docker push ghcr.io/${{ env.OWNER_LC }}/ssh-sync-service:latest
 
       - name: Build and Push api-gateway
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/api-gateway:latest ./api-gateway
-          docker push ghcr.io/${{ github.repository_owner }}/api-gateway:latest
+          docker build -t ghcr.io/${{ env.OWNER_LC }}/api-gateway:latest ./api-gateway
+          docker push ghcr.io/${{ env.OWNER_LC }}/api-gateway:latest
 
       - name: Write .env file for Docker Compose
         run: echo "JWT_SECRET=$JWT_SECRET" > .env
