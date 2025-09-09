@@ -58,7 +58,6 @@ jobs:
   docker-build-and-push:
     runs-on: ubuntu-latest
     needs: build-and-test
-
     permissions:
       contents: read
       packages: write
@@ -85,29 +84,43 @@ jobs:
       - name: Normalize owner to lowercase
         run: echo "OWNER_LC=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-
-      - name: Build and Push git-diff-service
+      # ===== Build images (всегда, и на PR тоже) =====
+      - name: Build git-diff-service image
         run: |
-          docker build -f git-diff-service/Dockerfile -t ghcr.io/${{ env.OWNER_LC }}/git-diff-service:latest .
+          docker build -f git-diff-service/Dockerfile \
+            --label "org.opencontainers.image.source=${{ github.repository }}" \
+            -t ghcr.io/${{ env.OWNER_LC }}/git-diff-service:latest .
+
+      - name: Build ssh-sync-service image
+        run: |
+          docker build -f ssh-sync-service/Dockerfile \
+            --label "org.opencontainers.image.source=${{ github.repository }}" \
+            -t ghcr.io/${{ env.OWNER_LC }}/ssh-sync-service:latest .
+
+      - name: Build api-gateway image
+        run: |
+          docker build -f api-gateway/Dockerfile \
+            --label "org.opencontainers.image.source=${{ github.repository }}" \
+            -t ghcr.io/${{ env.OWNER_LC }}/api-gateway:latest .
+
+      # ===== Push + compose только на push в main =====
+      - name: Push images to GHCR
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
+        run: |
           docker push ghcr.io/${{ env.OWNER_LC }}/git-diff-service:latest
-
-      - name: Build and Push ssh-sync-service
-        run: |
-          docker build -f ssh-sync-service/Dockerfile -t ghcr.io/${{ env.OWNER_LC }}/ssh-sync-service:latest .
           docker push ghcr.io/${{ env.OWNER_LC }}/ssh-sync-service:latest
-
-      - name: Build and Push api-gateway
-        run: |
-          docker build -f api-gateway/Dockerfile -t ghcr.io/${{ env.OWNER_LC }}/api-gateway:latest .
           docker push ghcr.io/${{ env.OWNER_LC }}/api-gateway:latest
 
       - name: Write .env file for Docker Compose
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         run: echo "JWT_SECRET=$JWT_SECRET" > .env
 
       - name: Start monitoring stack
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         run: docker compose --env-file .env -f docker-compose.yml -f docker-compose.prometheus.yml up -d
 
       - name: Wait for git-diff-service to be healthy
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         run: |
           for i in {1..30}; do
             if curl -sf http://localhost:8081/actuator/health >/dev/null; then
@@ -117,6 +130,7 @@ jobs:
           done
 
       - name: Wait for ssh-sync-service to be healthy
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         run: |
           for i in {1..30}; do
             if curl -sf http://localhost:8082/actuator/health >/dev/null; then
@@ -126,6 +140,7 @@ jobs:
           done
 
       - name: Wait for api-gateway to be healthy
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         run: |
           for i in {1..30}; do
             if curl -sf http://localhost:8083/actuator/health >/dev/null; then
@@ -135,6 +150,7 @@ jobs:
           done
 
       - name: Wait for Grafana to be healthy
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         run: |
           for i in {1..40}; do
             if curl -sf "$GRAFANA_URL/api/health" >/dev/null; then
@@ -144,6 +160,7 @@ jobs:
           done
 
       - name: Import dashboard via Grafana API (fallback)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         run: |
           if ! curl -sf "$GRAFANA_URL/api/search?query=$DASHBOARD_UID" -u "$GRAFANA_USER:$GRAFANA_PASS" | grep -q "\"uid\":\"$DASHBOARD_UID\""; then
             echo "Dashboard $DASHBOARD_UID not found, importing..."
@@ -164,12 +181,14 @@ jobs:
           fi
 
       - name: Render Grafana dashboard to PNG
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         run: |
           curl -sS -o grafana-dashboard.png \
             "$GRAFANA_URL/render/d/$DASHBOARD_UID/$DASHBOARD_SLUG?orgId=1&from=now-15m&to=now" \
             -u "$GRAFANA_USER:$GRAFANA_PASS"
 
       - name: Upload Grafana PNG
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
         uses: actions/upload-artifact@v4
         with:
           name: grafana-dashboard
