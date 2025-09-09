@@ -5,12 +5,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.blacksoil.sshsync.app.service.SyncService;
 import org.blacksoil.sshsync.web.sse.SseStreamExecutor;
@@ -22,7 +20,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(controllers = SshSyncController.class)
@@ -30,23 +27,18 @@ class SshSyncControllerWebTest {
 
   @Autowired MockMvc mvc;
 
-  @SuppressWarnings("removal")
-  @MockBean
-  SyncService syncService;
-
-  @SuppressWarnings("removal")
-  @MockBean
-  SseStreamExecutor sseExec;
+  @MockBean SyncService syncService;
+  @MockBean SseStreamExecutor sseExec;
 
   @Test
-  @DisplayName("POST /api/ssh/test -> 200 OK и делегирование в SyncService")
+  @DisplayName("POST /api/ssh/test -> 200 OK и вызов SyncService.testConnection")
   void test_ok() throws Exception {
     doNothing().when(syncService).testConnection("h", "alice", "pwd", "~/repo");
 
     String body =
         """
       {"host":"h","username":"alice","password":"pwd","remotePath":"~/repo"}
-    """;
+      """;
 
     mvc.perform(post("/api/ssh/test").contentType(MediaType.APPLICATION_JSON).content(body))
         .andExpect(status().isOk())
@@ -61,22 +53,23 @@ class SshSyncControllerWebTest {
     ResponseEntity<?> accepted = ResponseEntity.accepted().body(Map.of("ok", true));
     doReturn(accepted).when(sseExec).run(eq(false), eq("upload"), ArgumentMatchers.any());
 
-    String uploadJson =
+    String json =
         """
       {
-        "host":"h","username":"alice","password":"pwd",
-        "remotePath":"~/repo","localRoot":"/tmp/build",
-        "relativePaths":["a.txt","dir/b.txt"]
+        "host":"h",
+        "username":"alice",
+        "password":"pwd",
+        "remotePath":"~/repo",
+        "localRoot":"/tmp/build",
+        "files":["a.txt","dir/b.txt"]
       }
-    """;
-    MockMultipartFile uploadRequest =
-        new MockMultipartFile(
-            "uploadRequest",
-            "uploadRequest",
-            MediaType.APPLICATION_JSON_VALUE,
-            uploadJson.getBytes(StandardCharsets.UTF_8));
+      """;
 
-    mvc.perform(multipart("/api/ssh/upload").file(uploadRequest).param("stream", "false"))
+    mvc.perform(
+            post("/api/ssh/upload")
+                .param("stream", "false")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
         .andExpect(status().isAccepted())
         .andExpect(jsonPath("$.ok").value(true));
 
@@ -88,24 +81,25 @@ class SshSyncControllerWebTest {
   void upload_stream() throws Exception {
     ResponseEntity<?> okSse =
         ResponseEntity.ok().contentType(MediaType.TEXT_EVENT_STREAM).body("sse");
-    doReturn(okSse).when(sseExec).run(eq(true), eq("upload"), ArgumentMatchers.any());
+    doReturn(okSse).when(sseExec).run(eq(true), eq("upload"), any());
 
-    String uploadJson =
+    String json =
         """
       {
-        "host":"h","username":"alice","password":"pwd",
-        "remotePath":"~/repo","localRoot":"/tmp/build",
-        "relativePaths":["a.txt"]
+        "host":"h",
+        "username":"alice",
+        "password":"pwd",
+        "remotePath":"~/repo",
+        "localRoot":"/tmp/build",
+        "files":["a.txt"]
       }
-    """;
-    MockMultipartFile uploadRequest =
-        new MockMultipartFile(
-            "uploadRequest",
-            "uploadRequest",
-            MediaType.APPLICATION_JSON_VALUE,
-            uploadJson.getBytes(StandardCharsets.UTF_8));
+      """;
 
-    mvc.perform(multipart("/api/ssh/upload").file(uploadRequest).param("stream", "true"))
+    mvc.perform(
+            post("/api/ssh/upload")
+                .param("stream", "true")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
         .andExpect(status().isOk());
 
     verify(sseExec).run(eq(true), eq("upload"), any());
@@ -115,18 +109,24 @@ class SshSyncControllerWebTest {
   @DisplayName("POST /api/ssh/delete?stream=false -> 202 Accepted")
   void delete_sync() throws Exception {
     ResponseEntity<?> accepted = ResponseEntity.accepted().body(Map.of("ok", true));
-    doReturn(accepted).when(sseExec).run(eq(false), eq("delete"), ArgumentMatchers.any());
+    doReturn(accepted).when(sseExec).run(eq(false), eq("delete"), any());
 
-    String body =
+    String json =
         """
-      {"host":"h","username":"alice","password":"pwd",
-       "remotePath":"~/repo","relativePaths":["a.txt","dir/b.txt"]}
-    """;
+      {
+        "host":"h",
+        "username":"alice",
+        "password":"pwd",
+        "remotePath":"~/repo",
+        "files":["a.txt","dir/b.txt"]
+      }
+      """;
 
     mvc.perform(
-            post("/api/ssh/delete?stream=false")
+            post("/api/ssh/delete")
+                .param("stream", "false")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(body))
+                .content(json))
         .andExpect(status().isAccepted())
         .andExpect(jsonPath("$.ok").value(true));
 
@@ -138,18 +138,24 @@ class SshSyncControllerWebTest {
   void delete_stream() throws Exception {
     ResponseEntity<?> okSse =
         ResponseEntity.ok().contentType(MediaType.TEXT_EVENT_STREAM).body("sse");
-    doReturn(okSse).when(sseExec).run(eq(true), eq("delete"), ArgumentMatchers.any());
+    doReturn(okSse).when(sseExec).run(eq(true), eq("delete"), any());
 
-    String body =
+    String json =
         """
-      {"host":"h","username":"alice","password":"pwd",
-       "remotePath":"~/repo","relativePaths":["a.txt"]}
-    """;
+      {
+        "host":"h",
+        "username":"alice",
+        "password":"pwd",
+        "remotePath":"~/repo",
+        "files":["a.txt"]
+      }
+      """;
 
     mvc.perform(
-            post("/api/ssh/delete?stream=true")
+            post("/api/ssh/delete")
+                .param("stream", "true")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(body))
+                .content(json))
         .andExpect(status().isOk());
 
     verify(sseExec).run(eq(true), eq("delete"), any());
