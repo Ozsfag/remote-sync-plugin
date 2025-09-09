@@ -20,6 +20,8 @@ spring-cloud = "4.3.0"
 jjwt = "0.13.0"
 reactor = "3.6.3"
 
+wiremock = "3.5.4"
+
 [libraries]
 jsch = { module = "com.jcraft:jsch", version.ref = "jsch" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
@@ -50,6 +52,8 @@ jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
 jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
 
 reactor-test = { module = "io.projectreactor:reactor-test", version.ref = "reactor" }
+wiremock = { module = "org.wiremock:wiremock-standalone", version.ref = "wiremock" }
+
 
 [plugins]
 java = { id = "java" }

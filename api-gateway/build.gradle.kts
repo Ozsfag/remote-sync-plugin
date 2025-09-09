@@ -28,6 +28,7 @@ dependencies {
     // Тесты
     testImplementation(libs.spring.boot.test)
     testImplementation(libs.reactor.test)
+    testImplementation(libs.wiremock)
 }
 
 dependencyManagement {

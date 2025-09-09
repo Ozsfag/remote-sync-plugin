@@ -24,7 +24,7 @@ public class JwtAuthenticationFilter implements WebFilter {
   private final SecurityProperties securityProperties;
 
   private boolean isPermitted(String path) {
-    var list = securityProperties.permittedPaths();
+    var list = securityProperties.getPermittedPaths();
     return list != null && list.stream().anyMatch(p -> MATCHER.match(p, path));
   }
 
