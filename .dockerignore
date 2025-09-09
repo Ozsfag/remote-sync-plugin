@@ -1,7 +1,11 @@
 .git
-**/.gradle
 **/build
-**/out
-**/.idea
+**/.gradle
+.gradle
 **/*.iml
-.DS_Store
+.idea
+out
+node_modules
+.gradle/
+docker-compose*.yml
+*.md

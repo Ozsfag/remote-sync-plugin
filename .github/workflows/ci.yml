@@ -88,17 +88,17 @@ jobs:
 
       - name: Build and Push git-diff-service
         run: |
-          docker build -t ghcr.io/${{ env.OWNER_LC }}/git-diff-service:latest ./git-diff-service
+          docker build -f git-diff-service/Dockerfile -t ghcr.io/${{ env.OWNER_LC }}/git-diff-service:latest .
           docker push ghcr.io/${{ env.OWNER_LC }}/git-diff-service:latest
 
       - name: Build and Push ssh-sync-service
         run: |
-          docker build -t ghcr.io/${{ env.OWNER_LC }}/ssh-sync-service:latest ./ssh-sync-service
+          docker build -f ssh-sync-service/Dockerfile -t ghcr.io/${{ env.OWNER_LC }}/ssh-sync-service:latest .
           docker push ghcr.io/${{ env.OWNER_LC }}/ssh-sync-service:latest
 
       - name: Build and Push api-gateway
         run: |
-          docker build -t ghcr.io/${{ env.OWNER_LC }}/api-gateway:latest ./api-gateway
+          docker build -f api-gateway/Dockerfile -t ghcr.io/${{ env.OWNER_LC }}/api-gateway:latest .
           docker push ghcr.io/${{ env.OWNER_LC }}/api-gateway:latest
 
       - name: Write .env file for Docker Compose
