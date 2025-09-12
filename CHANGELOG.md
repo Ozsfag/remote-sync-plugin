@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.7] - 2025-09-12
+
+### Improved
+
+- ✨ Several minor improvements
+
 ## [1.1.6] - 2025-09-03
 
 ### Added

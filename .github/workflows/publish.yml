@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.2.3)'
+        required: true
 
 jobs:
   publish:
@@ -14,6 +18,8 @@ jobs:
       contents: write
 
     env:
+      # tag to use both for push/tag runs and manual runs
+      RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
       REMOTE_SYNC_GH_TOKEN: ${{ secrets.REMOTE_SYNC_GH_TOKEN }}
       REMOTE_SYNC_REPO_OWNER: ${{ secrets.REMOTE_SYNC_REPO_OWNER }}
       REMOTE_SYNC_REPO_NAME: ${{ secrets.REMOTE_SYNC_REPO_NAME }}
@@ -21,12 +27,30 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Extract release notes from CHANGELOG.md
-        id: changelog
-        uses: ffurrer2/extract-release-notes@v2
         with:
-          changelog_file: CHANGELOG.md
+          fetch-depth: 0  # need full history & tags
+
+      - name: Validate tag input (manual runs only)
+        if: ${{ github.ref_type != 'tag' }}
+        run: |
+          [[ "${{ inputs.tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "Tag must match vX.Y.Z"; exit 1;
+          }
+
+      - name: Ensure tag exists on manual run
+        if: ${{ github.ref_type != 'tag' }}
+        env:
+          TAG: ${{ env.RELEASE_TAG }}
+        run: |
+          git fetch --tags --force
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "Tag $TAG already exists. Using it as release tag."
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" -m "Release $TAG" "${GITHUB_SHA}"
+            git push origin "$TAG"
+          fi
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -34,16 +58,29 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Setup Gradle (cache)
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Grant execute permissions
         run: chmod +x gradlew
 
       - name: Build Plugin for JetBrains Marketplace
         run: ./gradlew :ui:buildPlugin --stacktrace
 
+      - name: Extract release notes from CHANGELOG.md
+        id: changelog
+        uses: ffurrer2/extract-release-notes@v2
+        with:
+          changelog_file: CHANGELOG.md
+          version: ${{ env.RELEASE_TAG }}
+
       - name: Patch plugin.xml <change-notes> with release notes
         run: |
           RELEASE_NOTES="${{ steps.changelog.outputs.release_notes }}"
-          HTML_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^### \([^ ]*\)/<h3>\1<\/h3>/' | sed 's/^- \(.*\)/<li>\1<\/li>/' | awk 'BEGIN{print "<ul>"} {print} END{print "</ul>"}')
+          HTML_NOTES=$(echo "$RELEASE_NOTES" \
+            | sed 's/^### \([^ ]\+\)/<h3>\1<\/h3>/' \
+            | sed 's/^- \(.*\)/<li>\1<\/li>/' \
+            | awk 'BEGIN{print "<ul>"} {print} END{print "</ul>"}')
 
           awk -v notes="$HTML_NOTES" '
             BEGIN { inside = 0 }
@@ -52,22 +89,36 @@ jobs:
             inside == 0 { print }
           ' ui/src/main/resources/META-INF/plugin.xml > tmp && mv tmp ui/src/main/resources/META-INF/plugin.xml
 
-      - name: Publish Plugin
+      - name: Publish Plugin to JetBrains Marketplace
         run: ./gradlew :ui:publishPlugin --stacktrace
         env:
           JB_PUBLISH_TOKEN: ${{ secrets.JB_PUBLISH_TOKEN }}
 
-      - name: Upload plugin artifact
+      - name: Upload plugin artifact (CI artifact)
         uses: actions/upload-artifact@v4
         with:
           name: remote-sync-plugin
           path: ui/build/distributions/*.zip
 
-      - name: Publish GitHub Release
+      - name: Write release notes to file
+        run: |
+          printf "%s" "${{ steps.changelog.outputs.release_notes }}" > RELEASE_NOTES.md
+
+      - name: Publish GitHub Release (create or update)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ env.RELEASE_TAG }}
         run: |
-          gh release create "${{ github.ref_name }}" \
-            --notes "${{ steps.changelog.outputs.release_notes }}" \
-            --verify-tag \
-            --title "Release ${{ github.ref_name }}"
+          set -e
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG exists. Updating notes and uploading assets..."
+            gh release upload "$TAG" ui/build/distributions/*.zip --clobber
+            gh release edit "$TAG" --title "Release $TAG" --notes-file RELEASE_NOTES.md
+          else
+            echo "Creating release $TAG..."
+            gh release create "$TAG" \
+              --verify-tag \
+              --title "Release $TAG" \
+              --notes-file RELEASE_NOTES.md \
+              ui/build/distributions/*.zip
+          fi

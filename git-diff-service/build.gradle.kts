@@ -5,7 +5,6 @@ plugins {
     alias(libs.plugins.jacoco)
 }
 group = "org.blacksoil.gitdiff"
-version = "1.1.6"
 
 dependencies {
     implementation(project(":shared-dto"))

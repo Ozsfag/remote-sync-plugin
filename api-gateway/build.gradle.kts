@@ -6,7 +6,6 @@ plugins {
 }
 
 group = "org.blacksoil.apigateway"
-version = "1.1.7"
 
 dependencies {
     // Gateway (WebFlux)

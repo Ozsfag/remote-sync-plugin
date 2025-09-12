@@ -5,7 +5,6 @@ plugins {
     alias(libs.plugins.jacoco)
 }
 group = "org.blacksoil.sshsync"
-version = "1.1.6"
 
 dependencies {
     implementation(project(":shared-dto"))

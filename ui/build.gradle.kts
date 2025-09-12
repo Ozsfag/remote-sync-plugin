@@ -5,7 +5,6 @@ plugins {
 }
 
 group = "org.blacksoil.ui"
-version = "1.1.7"
 
 repositories {
     mavenCentral()
