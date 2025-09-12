@@ -32,6 +32,8 @@ import org.springframework.test.web.reactive.server.WebTestClient;
     })
 class ApiGatewayIntegrationTest {
 
+  private static final String SECRET = "test-jwt-secret-test-jwt-secret-32bytes";
+
   @RegisterExtension
   @Order(1)
   static WireMockExtension gitDiffMock =
@@ -42,25 +44,14 @@ class ApiGatewayIntegrationTest {
   static WireMockExtension sshSyncMock =
       WireMockExtension.newInstance().options(wireMockConfig().dynamicPort()).build();
 
+  @LocalServerPort int port;
+  private WebTestClient client;
+
   @DynamicPropertySource
   static void overrideUris(DynamicPropertyRegistry registry) {
     registry.add("GIT_DIFF_URI", () -> "http://localhost:" + gitDiffMock.getPort());
     registry.add("SSH_SYNC_URI", () -> "http://localhost:" + sshSyncMock.getPort());
   }
-
-  @LocalServerPort int port;
-  private WebTestClient client;
-
-  @BeforeEach
-  void initClient() {
-    this.client =
-        WebTestClient.bindToServer()
-            .baseUrl("http://localhost:" + port)
-            .responseTimeout(Duration.ofSeconds(5))
-            .build();
-  }
-
-  private static final String SECRET = "test-jwt-secret-test-jwt-secret-32bytes";
 
   private static String jwt() {
     long now = System.currentTimeMillis();
@@ -71,6 +62,15 @@ class ApiGatewayIntegrationTest {
         .expiration(new Date(now + 3600_000))
         .signWith(key) // HS256
         .compact();
+  }
+
+  @BeforeEach
+  void initClient() {
+    this.client =
+        WebTestClient.bindToServer()
+            .baseUrl("http://localhost:" + port)
+            .responseTimeout(Duration.ofSeconds(5))
+            .build();
   }
 
   @BeforeEach

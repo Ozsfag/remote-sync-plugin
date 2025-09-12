@@ -11,12 +11,6 @@ class JwtUtilsTest {
 
   private JwtUtils jwt;
 
-  @BeforeEach
-  void setUp() {
-    jwt = new JwtUtils();
-    ReflectionTestUtils.setField(jwt, "secret", "test-secret-32bytes-minlength-!!!!");
-  }
-
   private static String token(long iat, long exp) throws Exception {
     var header =
         java.util.Base64.getUrlEncoder()
@@ -36,6 +30,12 @@ class JwtUtilsTest {
             .withoutPadding()
             .encodeToString(mac.doFinal(data.getBytes()));
     return data + "." + sig;
+  }
+
+  @BeforeEach
+  void setUp() {
+    jwt = new JwtUtils();
+    ReflectionTestUtils.setField(jwt, "secret", "test-secret-32bytes-minlength-!!!!");
   }
 
   @Test

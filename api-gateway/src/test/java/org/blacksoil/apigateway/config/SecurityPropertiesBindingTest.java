@@ -11,9 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(classes = SecurityPropertiesBindingTest.Conf.class)
 class SecurityPropertiesBindingTest {
 
-  @EnableConfigurationProperties(SecurityProperties.class)
-  static class Conf {}
-
   @Autowired SecurityProperties props;
 
   @Test
@@ -22,4 +19,7 @@ class SecurityPropertiesBindingTest {
     assertThat(p).isNotEmpty();
     assertThat(p).anyMatch(s -> s.startsWith("/actuator/"));
   }
+
+  @EnableConfigurationProperties(SecurityProperties.class)
+  static class Conf {}
 }
