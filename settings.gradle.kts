@@ -10,12 +10,13 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories { mavenCentral() }
-    versionCatalogs {
-
-    }
+    versionCatalogs {  }
 }
-include("git-diff-service")
-include("shared-dto")
-include("ssh-sync-service")
-include("ui")
-include("api-gateway")
+include(":git-diff-service")
+include(":shared-dto")
+include(":ssh-sync-service")
+include(":api-gateway")
+include(":ui")
+include(":ui:plugin-toolbar-service")
+include(":ui:welcome-page-service")
+include(":ui:error-handler-service")
