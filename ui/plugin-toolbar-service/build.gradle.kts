@@ -17,7 +17,7 @@ dependencies {
     }
 
     api(project(":shared-dto"))
-    implementation(libs.org.json)
+    implementation(libs.json)
 
     implementation(project(":ui:error-handler-service"))
 

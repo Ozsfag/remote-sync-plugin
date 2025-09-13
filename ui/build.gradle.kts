@@ -15,12 +15,9 @@ dependencies {
     intellijPlatform { intellijIdeaCommunity(libs.versions.intellij.idea.get()) }
 
     implementation(project(":ui:plugin-toolbar-service"))
+    implementation(":ui:plugin-toolbar-service:toolbar-view")
     implementation(project(":ui:welcome-page-service"))
     implementation(project(":ui:error-handler-service"))
-}
-
-java {
-    toolchain { languageVersion.set(JavaLanguageVersion.of(21)) }
 }
 
 intellijPlatform {

@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.intellij.platform)
 }
 
-group = "org.blacksoil.ui.error"
+group = "org.blacksoil.ui.toolbar.view.view"
 
 repositories {
     mavenCentral()
@@ -13,11 +13,10 @@ repositories {
 dependencies {
     intellijPlatform {
         intellijIdeaCommunity(libs.versions.intellij.idea.get())
+        bundledPlugins("com.intellij.java")
     }
-    implementation(libs.json)
-
-    compileOnly(libs.lombok)
-    annotationProcessor(libs.lombok)
+    implementation(project(":ui:plugin-toolbar-service:toolbar-app"))
+    implementation(project(":ui:error-handler-service"))
 
     testImplementation(libs.junit.api)
     testRuntimeOnly(libs.junit.engine)
@@ -25,4 +24,5 @@ dependencies {
     testImplementation(libs.mockito.junit)
 }
 
+java { toolchain { languageVersion.set(JavaLanguageVersion.of(21)) } }
 tasks.test { useJUnitPlatform() }

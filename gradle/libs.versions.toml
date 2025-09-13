@@ -31,7 +31,7 @@ mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.re
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-junit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 
-org-json = { module = "org.json:json", version.ref = "json" }
+json = { module = "org.json:json", version.ref = "json" }
 
 junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
