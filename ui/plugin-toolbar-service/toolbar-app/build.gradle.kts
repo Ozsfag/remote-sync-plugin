@@ -30,5 +30,4 @@ dependencies {
     testImplementation(libs.mockito.junit)
 }
 
-java { toolchain { languageVersion.set(JavaLanguageVersion.of(21)) } }
 tasks.test { useJUnitPlatform() }
